@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/big_card.dart';
 import '../my_app_state.dart';
-import 'history_page.dart';
-import 'new_workout_page.dart';
-import 'settings_page.dart';
+import '/pages/history_page.dart';
+import '/pages/new_workout_page.dart';
+import '/pages/settings_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 

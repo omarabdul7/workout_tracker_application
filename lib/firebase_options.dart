@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: 'workout-tracker-a7b92.firebaseapp.com',
     storageBucket: 'workout-tracker-a7b92.appspot.com',
   );
+
 }
