@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: '***REMOVED***.firebaseapp.com',
     storageBucket: '***REMOVED***.appspot.com',
   );
+
 }
