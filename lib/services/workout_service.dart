@@ -14,7 +14,8 @@ class WorkoutService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Workout.fromJson(doc.data() as Map<String, dynamic>);
+        final data = doc.data() as Map<String, dynamic>;
+        return Workout.fromJson(data);
       }).toList();
     });
   }
