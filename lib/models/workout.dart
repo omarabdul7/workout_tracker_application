@@ -5,12 +5,10 @@ class Workout {
 
   Workout({required this.name, required this.exercises, required this.createdAt});
 
-  // Add these methods for Firebase integration
   Map<String, dynamic> toJson() {
     return {
       'name': name,
       'exercises': exercises.map((e) => e.toJson()).toList(),
-      'createdAt': createdAt.toIso8601String(),
     };
   }
 
