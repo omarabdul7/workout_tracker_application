@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'my_app_state.dart' as app_state;
-import 'pages/generator_page.dart' as home_page;
+import 'pages/home_page.dart' ;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'my_app_state.dart';
-import 'pages/generator_page.dart';
 import 'pages/history_page.dart';
 import 'pages/new_workout_page.dart';
 import 'pages/settings_page.dart';
@@ -66,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    GeneratorPage(),
+    HomePage(),
     HistoryPage(),
     NewWorkoutPage(),
     SettingsPage(),
