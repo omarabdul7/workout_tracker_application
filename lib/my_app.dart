@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'my_app_state.dart' as app_state;
-import 'pages/home_page.dart' ;
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'pages/home_page.dart';
 import 'my_app_state.dart';
 import 'pages/history_page.dart';
 import 'pages/new_workout_page.dart';
@@ -17,7 +14,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'Workout Tracker',
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2C4C60)),

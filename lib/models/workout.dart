@@ -1,3 +1,5 @@
+import '/models/exercise.dart';
+
 class Workout {
   final String name;
   final List<Exercise> exercises;
@@ -15,30 +17,10 @@ class Workout {
 
   factory Workout.fromJson(Map<String, dynamic> json) {
     return Workout(
-      name: json['name'],
-      exercises: (json['exercises'] as List).map((e) => Exercise.fromJson(e)).toList(),
-      createdAt: DateTime.parse(json['createdAt']),
+      name: json['name'] as String,
+      exercises: (json['exercises'] as List).map((e) => Exercise.fromJson(e as Map<String, dynamic>)).toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 }
 
-class Exercise {
-  final String name;
-  final int sets;
-
-  Exercise({required this.name, required this.sets});
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'sets': sets,
-    };
-  }
-
-  factory Exercise.fromJson(Map<String, dynamic> json) {
-    return Exercise(
-      name: json['name'],
-      sets: json['sets'],
-    );
-  }
-}

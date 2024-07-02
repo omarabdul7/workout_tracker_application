@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'workout_form.dart';
-import 'workout_list.dart';
+import 'New Workout Pages/create_workout_template.dart';
+import 'New Workout Pages/workout_template_list.dart';
 
 class NewWorkoutPage extends StatelessWidget {
   const NewWorkoutPage({Key? key}) : super(key: key);
@@ -8,15 +8,13 @@ class NewWorkoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Workouts'),
-      ),
-      body: WorkoutList(),
+
+      body: WorkoutTemplateList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const WorkoutForm()),
+            MaterialPageRoute(builder: (context) => const CreateWorkoutTemplate()),
           );
         },
         child: const Icon(Icons.add),

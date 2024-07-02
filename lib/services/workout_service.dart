@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '/models/workout.dart';
 
 class WorkoutService {
-  final CollectionReference workoutsCollection = FirebaseFirestore.instance.collection('workouts');
+  final CollectionReference workoutsCollection = FirebaseFirestore.instance.collection('workout_templates');
 
   Future<void> addWorkout(Workout workout) {
     return workoutsCollection.add(workout.toJson());
