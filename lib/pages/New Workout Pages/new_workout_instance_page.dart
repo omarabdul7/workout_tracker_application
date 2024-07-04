@@ -15,12 +15,40 @@ class NewWorkoutInstancePage extends StatefulWidget {
 class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   final _formKey = GlobalKey<FormState>();
   final List<ExerciseInstance> _exerciseInstances = [];
+  WorkoutInstance? _lastWorkoutInstance;
+  late Future<void> _loadDataFuture;
 
   @override
   void initState() {
     super.initState();
+    _loadDataFuture = _loadLastWorkoutInstance();
+  }
+
+  Future<void> _loadLastWorkoutInstance() async {
+    _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
+
     for (var exercise in widget.workout.exercises) {
-      final sets = List.generate(exercise.sets, (index) => SetDetails(setNumber: index + 1, weight: 0.0, reps: 0));
+      final lastExerciseInstance = _lastWorkoutInstance?.exercises.firstWhere(
+        (e) => e.name == exercise.name,
+        orElse: () => ExerciseInstance(name: exercise.name, sets: []),
+      );
+
+      final sets = List.generate(
+        exercise.sets,
+        (index) {
+          double weight = 0.0;
+          int reps = 0;
+          if (lastExerciseInstance != null && lastExerciseInstance.sets.length > index) {
+            weight = lastExerciseInstance.sets[index].weight;
+            reps = lastExerciseInstance.sets[index].reps;
+          }
+          return SetDetails(
+            setNumber: index + 1,
+            weight: weight,
+            reps: reps,
+          );
+        },
+      );
       _exerciseInstances.add(ExerciseInstance(name: exercise.name, sets: sets));
     }
   }
@@ -55,65 +83,129 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.workout.name),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              ..._exerciseInstances.map((exercise) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    exercise.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  ...exercise.sets.map((set) => Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          decoration: InputDecoration(labelText: 'Set ${set.setNumber} - Weight'),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            set.weight = double.tryParse(value) ?? 0.0;
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a weight';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: InputDecoration(labelText: 'Reps'),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            set.reps = int.tryParse(value) ?? 0;
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter reps';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  )).toList(),
-                  const Divider(),
-                ],
-              )).toList(),
-              ElevatedButton(
-                onPressed: _saveWorkoutInstance,
-                child: const Text('Save Workout'),
-              ),
-            ],
+        actions: [
+          TextButton(
+            onPressed: _saveWorkoutInstance,
+            child: const Text(
+              'Finish',
+              style: TextStyle(color: Colors.green),
+            ),
           ),
-        ),
+        ],
+      ),
+      body: FutureBuilder(
+        future: _loadDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    Text(
+                      widget.workout.name,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._exerciseInstances.map((exercise) => Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      color: Color.fromARGB(255, 241, 246, 249),  
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              exercise.name,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            if (_lastWorkoutInstance != null) ...[
+                              Text(
+                                'Previous',
+                                style: TextStyle(color: Colors.grey[700]),
+                              ),
+                              const SizedBox(height: 8),
+                              ..._lastWorkoutInstance!.exercises
+                                  .where((e) => e.name == exercise.name)
+                                  .expand((e) => e.sets.map((set) => Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                        child: Text('Set ${set.setNumber}: ${set.weight} lb x ${set.reps}'),
+                                      ))),
+                              const Divider(thickness: 1),
+                              const SizedBox(height: 8),
+                            ],
+                            ...exercise.sets.map((set) => Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
+                                    keyboardType: TextInputType.number,
+                                    initialValue: set.weight.toString(),
+                                    onChanged: (value) {
+                                      set.weight = double.tryParse(value) ?? 0.0;
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Enter weight';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextFormField(
+                                    decoration: const InputDecoration(labelText: 'Reps'),
+                                    keyboardType: TextInputType.number,
+                                    initialValue: set.reps.toString(),
+                                    onChanged: (value) {
+                                      set.reps = int.tryParse(value) ?? 0;
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Enter reps';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )).toList(),
+                            TextButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Set'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )).toList(),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Exercises'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Cancel Workout'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+        },
       ),
     );
   }

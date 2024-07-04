@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         title: 'Workout Tracker',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2C4C60)),
+          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO (202,222,239, 1)),
           textTheme: const TextTheme(
             displayMedium: TextStyle(
               fontSize: 24,

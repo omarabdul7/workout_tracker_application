@@ -1,4 +1,3 @@
-
 class ExerciseInstance {
   final String name;
   final List<SetDetails> sets;
@@ -43,7 +42,6 @@ class SetDetails {
     );
   }
 }
-
 
 class WorkoutInstance {
   final String name;
