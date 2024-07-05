@@ -116,6 +116,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///Users/omarabdul/.pub-cache/hosted/pub.dev/intl-0.17.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "leak_tracker",
       "rootUri": "file:///Users/omarabdul/.pub-cache/hosted/pub.dev/leak_tracker-10.0.4",
       "packageUri": "lib/",
@@ -260,7 +266,7 @@
       "languageVersion": "3.1"
     }
   ],
-  "generated": "2024-07-02T16:24:57.386053Z",
+  "generated": "2024-07-05T19:50:33.126737Z",
   "generator": "pub",
   "generatorVersion": "3.4.3",
   "flutterRoot": "file:///Users/omarabdul/flutter",
