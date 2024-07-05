@@ -105,6 +105,26 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
     );
   }
 
+  void _moveExerciseUp(int index) {
+    if (index > 0) {
+      setState(() {
+        final temp = _exerciseInstances[index];
+        _exerciseInstances[index] = _exerciseInstances[index - 1];
+        _exerciseInstances[index - 1] = temp;
+      });
+    }
+  }
+
+  void _moveExerciseDown(int index) {
+    if (index < _exerciseInstances.length - 1) {
+      setState(() {
+        final temp = _exerciseInstances[index];
+        _exerciseInstances[index] = _exerciseInstances[index + 1];
+        _exerciseInstances[index + 1] = temp;
+      });
+    }
+  }
+
   void _saveWorkoutInstance() {
     if (_formKey.currentState!.validate()) {
       final workoutInstance = WorkoutInstance(
@@ -164,84 +184,105 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    ..._exerciseInstances.map((exercise) => Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      color: const Color.fromARGB(255, 241, 246, 249),  
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              exercise.name,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            if (_lastWorkoutInstance != null) ...[
-                              Text(
-                                'Previous',
-                                style: TextStyle(color: Colors.grey[700]),
+                    ..._exerciseInstances.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      ExerciseInstance exercise = entry.value;
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        color: const Color.fromARGB(255, 241, 246, 249),  
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    exercise.name,
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.arrow_upward),
+                                        onPressed: () => _moveExerciseUp(index),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.arrow_downward),
+                                        onPressed: () => _moveExerciseDown(index),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
-                              ..._lastWorkoutInstance!.exercises
-                                  .where((e) => e.name == exercise.name)
-                                  .expand((e) => e.sets.map((set) => Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                        child: Text('Set ${set.setNumber}: ${set.weight} lb x ${set.reps}'),
-                                      ))),
-                              const Divider(thickness: 1),
-                              const SizedBox(height: 8),
-                            ],
-                            ...exercise.sets.map((set) => Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
-                                    keyboardType: TextInputType.number,
-                                    initialValue: set.weight.toString(),
-                                    onChanged: (value) {
-                                      set.weight = double.tryParse(value) ?? 0.0;
-                                    },
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Enter weight';
-                                      }
-                                      return null;
-                                    },
-                                  ),
+                              if (_lastWorkoutInstance != null) ...[
+                                Text(
+                                  'Previous',
+                                  style: TextStyle(color: Colors.grey[700]),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(labelText: 'Reps'),
-                                    keyboardType: TextInputType.number,
-                                    initialValue: set.reps.toString(),
-                                    onChanged: (value) {
-                                      set.reps = int.tryParse(value) ?? 0;
-                                    },
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Enter reps';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
+                                const SizedBox(height: 8),
+                                ..._lastWorkoutInstance!.exercises
+                                    .where((e) => e.name == exercise.name)
+                                    .expand((e) => e.sets.map((set) => Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                          child: Text('Set ${set.setNumber}: ${set.weight} lb x ${set.reps}'),
+                                        ))),
+                                const Divider(thickness: 1),
+                                const SizedBox(height: 8),
                               ],
-                            )).toList(),
-                            TextButton.icon(
-                              onPressed: () => _addSet(exercise),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add Set'),
-                            ),
-                          ],
+                              ...exercise.sets.map((set) => Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
+                                      keyboardType: TextInputType.number,
+                                      initialValue: set.weight.toString(),
+                                      onChanged: (value) {
+                                        set.weight = double.tryParse(value) ?? 0.0;
+                                      },
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Enter weight';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: TextFormField(
+                                      decoration: const InputDecoration(labelText: 'Reps'),
+                                      keyboardType: TextInputType.number,
+                                      initialValue: set.reps.toString(),
+                                      onChanged: (value) {
+                                        set.reps = int.tryParse(value) ?? 0;
+                                      },
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Enter reps';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              )).toList(),
+                              TextButton.icon(
+                                onPressed: () => _addSet(exercise),
+                                icon: const Icon(Icons.add),
+                                label: const Text('Add Set'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    )).toList(),
+                      );
+                    }).toList(),
                     TextButton.icon(
                       onPressed: _addExercise,
                       icon: const Icon(Icons.add),
-                      label: const Text('Add Exercise'),
+                      label: const Text('Add Exercises'),
                       style: TextButton.styleFrom(foregroundColor: Colors.blue),
                     ),
                     const SizedBox(height: 16),
