@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import '/services/workout_instance_service.dart';
-import '/models/workout_instance.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import '/models/workout_instance.dart';
+import '/services/workout_instance_service.dart';
+import 'History Pages/historic_workouts.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
@@ -48,6 +49,14 @@ class _HistoryPageState extends State<HistoryPage> {
                 return ListTile(
                   title: Text(workout.name),
                   subtitle: Text(formatDateTime(workout.createdAt)),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HistoricWorkout(workoutInstance: workout),
+                      ),
+                    );
+                  },
                 );
               },
             );
