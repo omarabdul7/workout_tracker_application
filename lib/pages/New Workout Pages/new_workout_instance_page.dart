@@ -53,6 +53,58 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
     }
   }
 
+  void _addSet(ExerciseInstance exerciseInstance) {
+    setState(() {
+      exerciseInstance.sets.add(SetDetails(
+        setNumber: exerciseInstance.sets.length + 1,
+        weight: 0.0,
+        reps: 0,
+      ));
+    });
+  }
+
+  void _addExercise() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController nameController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add New Exercise'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(labelText: 'Exercise Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  setState(() {
+                    _exerciseInstances.add(ExerciseInstance(
+                      name: nameController.text,
+                      sets: [SetDetails(setNumber: 1, weight: 0.0, reps: 0)],
+                    ));
+                  });
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter an exercise name')),
+                  );
+                }
+              },
+              child: const Text('Add'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _saveWorkoutInstance() {
     if (_formKey.currentState!.validate()) {
       final workoutInstance = WorkoutInstance(
@@ -114,7 +166,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                     const SizedBox(height: 8),
                     ..._exerciseInstances.map((exercise) => Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
-                      color: Color.fromARGB(255, 241, 246, 249),  
+                      color: const Color.fromARGB(255, 241, 246, 249),  
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -178,7 +230,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                               ],
                             )).toList(),
                             TextButton.icon(
-                              onPressed: () {},
+                              onPressed: () => _addSet(exercise),
                               icon: const Icon(Icons.add),
                               label: const Text('Add Set'),
                             ),
@@ -187,9 +239,9 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                       ),
                     )).toList(),
                     TextButton.icon(
-                      onPressed: () {},
+                      onPressed: _addExercise,
                       icon: const Icon(Icons.add),
-                      label: const Text('Add Exercises'),
+                      label: const Text('Add Exercise'),
                       style: TextButton.styleFrom(foregroundColor: Colors.blue),
                     ),
                     const SizedBox(height: 16),
