@@ -34,4 +34,32 @@ class WorkoutInstanceService {
       return null;
     }
   }
+
+
+Future<List<String>> getWorkoutTemplateNames() async {
+  List<String> workoutTemplateNames = [];
+
+  QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('workout_templates').get();
+  for (var doc in snapshot.docs) {
+    String name = doc['name'].toString().toLowerCase().replaceAll(' ', '_');
+    workoutTemplateNames.add(name);
+  }
+
+  return workoutTemplateNames;
 }
+
+
+  Future<List<WorkoutInstance>> getHistoricWorkouts() async {
+    List<WorkoutInstance> workouts = [];
+    List<String> workoutTemplateNames = await getWorkoutTemplateNames();
+
+    for (String templateName in workoutTemplateNames) {
+      CollectionReference collection = FirebaseFirestore.instance.collection(templateName);
+      QuerySnapshot snapshot = await collection.get();
+      workouts.addAll(snapshot.docs.map((doc) => WorkoutInstance.fromJson(doc.data() as Map<String, dynamic>)).toList());
+    }
+
+    return workouts;
+  }
+}
+
