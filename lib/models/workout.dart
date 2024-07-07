@@ -18,7 +18,9 @@ class Workout {
   factory Workout.fromJson(Map<String, dynamic> json) {
     return Workout(
       name: json['name'] as String,
-      exercises: (json['exercises'] as List).map((e) => Exercise.fromJson(e as Map<String, dynamic>)).toList(),
+      exercises: (json['exercises'] as List)
+          .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
+          .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
