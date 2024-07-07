@@ -23,6 +23,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   Timer? _timer;
   int _timerSeconds = 0;
   int _timerMilliseconds = 0;
+  int _currentExerciseRestPeriod = 0; // New variable to store current exercise rest period
 
   @override
   void initState() {
@@ -37,35 +38,34 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
     super.dispose();
   }
 
-Future<void> _loadLastWorkoutInstance() async {
-  _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
+  Future<void> _loadLastWorkoutInstance() async {
+    _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
 
-  for (var exercise in widget.workout.exercises) {
-    final lastExerciseInstance = _lastWorkoutInstance?.exercises.firstWhere(
-      (e) => e.name == exercise.name,
-      orElse: () => ExerciseInstance(name: exercise.name, sets: []),
-    );
+    for (var exercise in widget.workout.exercises) {
+      final lastExerciseInstance = _lastWorkoutInstance?.exercises.firstWhere(
+        (e) => e.name == exercise.name,
+        orElse: () => ExerciseInstance(name: exercise.name, sets: []),
+      );
 
-    final sets = List.generate(
-      exercise.sets,
-      (index) {
-        double weight = 0.0;
-        int reps = 0;
-        if (lastExerciseInstance != null && lastExerciseInstance.sets.length > index) {
-          weight = lastExerciseInstance.sets[index].weight;
-          reps = lastExerciseInstance.sets[index].reps;
-        }
-        return SetDetails(
-          setNumber: index + 1,
-          weight: weight,
-          reps: reps,
-        );
-      },
-    );
-    _exerciseInstances.add(ExerciseInstance(name: exercise.name, sets: sets));
+      final sets = List.generate(
+        exercise.sets,
+        (index) {
+          double weight = 0.0;
+          int reps = 0;
+          if (lastExerciseInstance != null && lastExerciseInstance.sets.length > index) {
+            weight = lastExerciseInstance.sets[index].weight;
+            reps = lastExerciseInstance.sets[index].reps;
+          }
+          return SetDetails(
+            setNumber: index + 1,
+            weight: weight,
+            reps: reps,
+          );
+        },
+      );
+      _exerciseInstances.add(ExerciseInstance(name: exercise.name, sets: sets));
+    }
   }
-}
-
 
   void _saveWorkoutInstance() {
     if (_formKey.currentState!.validate()) {
@@ -121,6 +121,8 @@ Future<void> _loadLastWorkoutInstance() async {
           _timerMilliseconds = 0;
         }
       });
+
+
     });
   }
 
@@ -148,182 +150,183 @@ Future<void> _loadLastWorkoutInstance() async {
     });
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(widget.workout.name),
-      actions: [
-        TextButton(
-          onPressed: _saveWorkoutInstance,
-          child: const Text(
-            'Finish',
-            style: TextStyle(color: Colors.green),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.workout.name),
+        actions: [
+          TextButton(
+            onPressed: _saveWorkoutInstance,
+            child: const Text(
+              'Finish',
+              style: TextStyle(color: Colors.green),
+            ),
           ),
-        ),
-      ],
-    ),
-    body: FutureBuilder(
-      future: _loadDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          ..._exerciseInstances.map((exercise) {
-                            final exerciseIndex = _exerciseInstances.indexOf(exercise);
-                            final templateExercise = widget.workout.exercises.firstWhere(
-                              (e) => e.name == exercise.name,
-                              orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),);
+        ],
+      ),
+      body: FutureBuilder(
+        future: _loadDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            ..._exerciseInstances.map((exercise) {
+                              final exerciseIndex = _exerciseInstances.indexOf(exercise);
+                              final templateExercise = widget.workout.exercises.firstWhere(
+                                (e) => e.name == exercise.name,
+                                orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
+                              );
+                              _currentExerciseRestPeriod = templateExercise.restPeriod;
 
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              color: const Color.fromARGB(255, 241, 246, 249),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          exercise.name,
-                                          style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
-                                        ),
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.arrow_upward),
-                                              onPressed: exerciseIndex > 0
-                                                  ? () => _moveExerciseUp(exerciseIndex)
-                                                  : null,
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.arrow_downward),
-                                              onPressed: exerciseIndex < _exerciseInstances.length - 1
-                                                  ? () => _moveExerciseDown(exerciseIndex)
-                                                  : null,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    if (_lastWorkoutInstance != null) ...[
-                                      const Text(
-                                        'Previous',
-                                        style: TextStyle(color: Colors.black),
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                color: const Color.fromARGB(255, 241, 246, 249),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            exercise.name,
+                                            style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
+                                          ),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.arrow_upward),
+                                                onPressed: exerciseIndex > 0 ? () => _moveExerciseUp(exerciseIndex) : null,
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.arrow_downward),
+                                                onPressed: exerciseIndex < _exerciseInstances.length - 1 ? () => _moveExerciseDown(exerciseIndex) : null,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 8),
-                                      ..._lastWorkoutInstance!.exercises
-                                          .where((e) => e.name == exercise.name)
-                                          .expand((e) => e.sets.map((set) => Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(4.0),
-                                                  child: Text(
-                                                    'Set ${set.setNumber}: ${set.weight} lb x ${set.reps}',
-                                                    style: const TextStyle(color: Colors.black),
+                                      if (_lastWorkoutInstance != null) ...[
+                                        const Text(
+                                          'Previous',
+                                          style: TextStyle(color: Colors.black),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        ..._lastWorkoutInstance!.exercises
+                                            .where((e) => e.name == exercise.name)
+                                            .expand((e) => e.sets.map((set) => Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(4.0),
+                                                    child: Text(
+                                                      'Set ${set.setNumber}: ${set.weight} lb x ${set.reps}',
+                                                      style: const TextStyle(color: Colors.black),
+                                                    ),
                                                   ),
-                                                ),
-                                              ))),
-                                      const Divider(thickness: 1),
-                                      const SizedBox(height: 8),
-                                    ],
-                                    ...exercise.sets.map((set) => Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: TextFormField(
-                                                    decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
-                                                    keyboardType: TextInputType.number,
-                                                    initialValue: set.weight.toString(),
-                                                    onChanged: (value) {
-                                                      set.weight = double.tryParse(value) ?? 0.0;
-                                                      _resetTimer();
-                                                    },
-                                                    validator: (value) {
-                                                      if (value == null || value.isEmpty) {
-                                                        return 'Enter weight';
-                                                      }
-                                                      return null;
-                                                    },
+                                                ))),
+                                        const Divider(thickness: 1),
+                                        const SizedBox(height: 8),
+                                      ],
+                                      ...exercise.sets.map((set) => Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextFormField(
+                                                      decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
+                                                      keyboardType: TextInputType.number,
+                                                      initialValue: set.weight.toString(),
+                                                      onChanged: (value) {
+                                                        set.weight = double.tryParse(value) ?? 0.0;
+                                                        _resetTimer();
+                                                      },
+                                                      validator: (value) {
+                                                        if (value == null || value.isEmpty) {
+                                                          return 'Enter weight';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: TextFormField(
-                                                    decoration: const InputDecoration(labelText: 'Reps'),
-                                                    keyboardType: TextInputType.number,
-                                                    initialValue: set.reps.toString(),
-                                                    onChanged: (value) {
-                                                      set.reps = int.tryParse(value) ?? 0;
-                                                      _resetTimer();
-                                                    },
-                                                    validator: (value) {
-                                                      if (value == null || value.isEmpty) {
-                                                        return 'Enter reps';
-                                                      }
-                                                      return null;
-                                                    },
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: TextFormField(
+                                                      decoration: const InputDecoration(labelText: 'Reps'),
+                                                      keyboardType: TextInputType.number,
+                                                      initialValue: set.reps.toString(),
+                                                      onChanged: (value) {
+                                                        set.reps = int.tryParse(value) ?? 0;
+                                                        _resetTimer();
+                                                      },
+                                                      validator: (value) {
+                                                        if (value == null || value.isEmpty) {
+                                                          return 'Enter reps';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                            if (set.setNumber < templateExercise.sets) 
-                                              Padding(
-                                                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                child: Text(
-                                                  'Rest Period: ${templateExercise.restPeriod} seconds',
-                                                  style: const TextStyle(color: Colors.black, fontStyle: FontStyle.italic),
-                                                ),
+                                                ],
                                               ),
-                                          ],
-                                        )),
-                                    TextButton.icon(
-                                      onPressed: () => _addSet(exerciseIndex),
-                                      icon: const Icon(Icons.add),
-                                      label: const Text('Add Set'),
-                                    ),
-                                  ],
+                                              if (set.setNumber < templateExercise.sets)
+                                                Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                                  child: Text(
+                                                    'Rest Period: ${templateExercise.restPeriod} seconds',
+                                                    style: const TextStyle(color: Colors.black, fontStyle: FontStyle.italic),
+                                                  ),
+                                                ),
+                                            ],
+                                          )),
+                                      TextButton.icon(
+                                        onPressed: () => _addSet(exerciseIndex),
+                                        icon: const Icon(Icons.add),
+                                        label: const Text('Add Set'),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                          TextButton.icon(
-                            onPressed: _addExercise,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add Exercise'),
-                          ),
-                        ],
+                              );
+                            }).toList(),
+                            TextButton.icon(
+                              onPressed: _addExercise,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Exercise'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Text('Timer: $_timerSeconds.${(_timerMilliseconds / 100).floor()}s', style: const TextStyle(color: Colors.black)),
-                const SizedBox(height: 16),
-              ],
-            ),
-          );
-        }
-      },
-    ),
-  );
-}
+                  Text(
+                    'Timer: $_timerSeconds.${(_timerMilliseconds / 100).floor()}s',
+                    style: TextStyle(color: _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black), // Change color to red if timer exceeds rest period
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
 }
