@@ -25,6 +25,20 @@ class _HistoryPageState extends State<HistoryPage> {
     return formatter.format(dateTime);
   }
 
+  Map<String, List<WorkoutInstance>> groupWorkoutsByYearMonth(List<WorkoutInstance> workouts) {
+    Map<String, List<WorkoutInstance>> groupedWorkouts = {};
+
+    for (var workout in workouts) {
+      String yearMonth = DateFormat('yyyy MMMM').format(workout.createdAt);
+      if (!groupedWorkouts.containsKey(yearMonth)) {
+        groupedWorkouts[yearMonth] = [];
+      }
+      groupedWorkouts[yearMonth]!.add(workout);
+    }
+
+    return groupedWorkouts;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,21 +56,30 @@ class _HistoryPageState extends State<HistoryPage> {
             return Center(child: Text('No workouts found.'));
           } else {
             List<WorkoutInstance> workouts = snapshot.data!;
+            Map<String, List<WorkoutInstance>> groupedWorkouts = groupWorkoutsByYearMonth(workouts);
+
             return ListView.builder(
-              itemCount: workouts.length,
+              itemCount: groupedWorkouts.keys.length,
               itemBuilder: (context, index) {
-                WorkoutInstance workout = workouts[index];
-                return ListTile(
-                  title: Text(workout.name),
-                  subtitle: Text(formatDateTime(workout.createdAt)),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HistoricWorkout(workoutInstance: workout),
-                      ),
+                String yearMonth = groupedWorkouts.keys.elementAt(index);
+                List<WorkoutInstance> workoutsInMonth = groupedWorkouts[yearMonth]!;
+
+                return ExpansionTile(
+                  title: Text(yearMonth),
+                  children: workoutsInMonth.map((workout) {
+                    return ListTile(
+                      title: Text(workout.name),
+                      subtitle: Text(formatDateTime(workout.createdAt)),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HistoricWorkout(workoutInstance: workout),
+                          ),
+                        );
+                      },
                     );
-                  },
+                  }).toList(),
                 );
               },
             );

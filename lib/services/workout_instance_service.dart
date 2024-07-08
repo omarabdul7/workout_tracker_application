@@ -59,6 +59,8 @@ Future<List<String>> getWorkoutTemplateNames() async {
       workouts.addAll(snapshot.docs.map((doc) => WorkoutInstance.fromJson(doc.data() as Map<String, dynamic>)).toList());
     }
 
+    workouts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     return workouts;
   }
 }

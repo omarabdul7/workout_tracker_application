@@ -260,7 +260,7 @@
       "languageVersion": "3.3"
     },
     {
-      "name": "namer_app",
+      "name": "workout_tracker_application",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.1"
