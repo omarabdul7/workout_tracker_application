@@ -22,7 +22,7 @@ class WorkoutInstanceService {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        final data = querySnapshot.docs.first.data();
         if (data['createdAt'] is Timestamp) {
           data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
         }
