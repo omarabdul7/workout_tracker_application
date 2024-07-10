@@ -1,4 +1,4 @@
-name: workoutTrackerApplication
+name: workout_tracker_application
 description: A new Flutter project.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -17,7 +17,8 @@ dependencies:
   firebase_core: ^3.1.1
   flutter_riverpod: ^2.0.0
   cloud_firestore: ^5.0.2
-
+  charts_flutter: ^0.13.0
+  table_calendar: ^3.0.0
 
 
 dev_dependencies:

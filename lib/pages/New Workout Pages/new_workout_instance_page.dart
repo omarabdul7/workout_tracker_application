@@ -5,7 +5,6 @@ import '/models/workout_instance.dart';
 import '/services/workout_instance_service.dart';
 import '/models/exercise.dart';
 
-
 class NewWorkoutInstancePage extends StatefulWidget {
   final Workout workout;
 
@@ -23,13 +22,14 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   Timer? _timer;
   int _timerSeconds = 0;
   int _timerMilliseconds = 0;
-  int _currentExerciseRestPeriod = 0; // New variable to store current exercise rest period
+  late int _currentExerciseRestPeriod;
 
   @override
   void initState() {
     super.initState();
     _loadDataFuture = _loadLastWorkoutInstance();
     _startTimer();
+    _currentExerciseRestPeriod = widget.workout.exercises.first.restPeriod;
   }
 
   @override
@@ -121,15 +121,14 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
           _timerMilliseconds = 0;
         }
       });
-
-
     });
   }
 
-  void _resetTimer() {
+  void _resetTimer(int restPeriod) {
     setState(() {
       _timerSeconds = 0;
       _timerMilliseconds = 0;
+      _currentExerciseRestPeriod = restPeriod;
     });
   }
 
@@ -191,7 +190,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                                 (e) => e.name == exercise.name,
                                 orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
                               );
-                              _currentExerciseRestPeriod = templateExercise.restPeriod;
 
                               return Card(
                                 margin: const EdgeInsets.symmetric(vertical: 8),
@@ -256,7 +254,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                                                       initialValue: set.weight.toString(),
                                                       onChanged: (value) {
                                                         set.weight = double.tryParse(value) ?? 0.0;
-                                                        _resetTimer();
+                                                        _resetTimer(templateExercise.restPeriod);
                                                       },
                                                       validator: (value) {
                                                         if (value == null || value.isEmpty) {
@@ -274,7 +272,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                                                       initialValue: set.reps.toString(),
                                                       onChanged: (value) {
                                                         set.reps = int.tryParse(value) ?? 0;
-                                                        _resetTimer();
+                                                        _resetTimer(templateExercise.restPeriod);
                                                       },
                                                       validator: (value) {
                                                         if (value == null || value.isEmpty) {
@@ -318,7 +316,9 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
                   ),
                   Text(
                     'Timer: $_timerSeconds.${(_timerMilliseconds / 100).floor()}s',
-                    style: TextStyle(color: _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black), // Change color to red if timer exceeds rest period
+                    style: TextStyle(
+                      color: _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
