@@ -4,6 +4,11 @@ class ExerciseInstance {
 
   ExerciseInstance({required this.name, required this.sets});
 
+  static final List<String> muscleGroups = [
+    'tricep', 'chest', 'quadriceps', 'bicep', 'back', 'shoulders',
+    'hamstrings', 'calves', 'glutes', 'core'
+  ];
+
   static final Map<String, String> exerciseToMuscleGroup = {
     'bench press': 'chest',
     'benchpress': 'chest',
@@ -11,12 +16,16 @@ class ExerciseInstance {
     'push-up': 'chest',
     'pushup': 'chest',
     'push up': 'chest',
+    'dumbell press': 'chest',
     'incline bench press': 'chest',
     'incline benchpress': 'chest',
     'incline bench-press': 'chest',
     'decline bench press': 'chest',
     'decline benchpress': 'chest',
     'decline bench-press': 'chest',
+    'flat dumbell press': 'chest',
+    'incline dumbell press': 'chest',
+    'cable flies': 'chest',
     'tricep dip': 'triceps',
     'tricep dips': 'triceps',
     'dips': 'triceps',
@@ -47,16 +56,20 @@ class ExerciseInstance {
     'pull-up': 'back',
     'pullup': 'back',
     'pull up': 'back',
+    'pull ups': 'back',
     'chin-up': 'back',
     'chinup': 'back',
     'chin up': 'back',
     'lat pulldown': 'back',
+    'lat pull down': 'back',
     'lat pulldowns': 'back',
     'pulldown': 'back',
     'pulldowns': 'back',
     'seated row': 'back',
     'seated rows': 'back',
     'row': 'back',
+    'machine rows': 'back',
+    'cable rows': 'back',
     'rows': 'back',
     'bent-over row': 'back',
     'bent over row': 'back',
@@ -124,6 +137,12 @@ class ExerciseInstance {
   };
 
   String get muscleGroup {
+    for (var group in muscleGroups) {
+      if (name.toLowerCase().contains(group)) {
+        return group;
+      }
+    }
+    
     return exerciseToMuscleGroup[name.toLowerCase()] ?? 'unknown';
   }
 
@@ -149,7 +168,7 @@ class ExerciseInstance {
 }
 
 class SetDetails {
-  final int setNumber;
+  int setNumber;
   double weight;
   int reps;
 
