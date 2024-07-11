@@ -17,8 +17,9 @@ dependencies:
   firebase_core: ^3.1.1
   flutter_riverpod: ^2.0.0
   cloud_firestore: ^5.0.2
-  charts_flutter: ^0.13.0
   table_calendar: ^3.0.0
+  pull_to_refresh: ^2.0.0
+  fl_chart: ^0.68.0
 
 
 dev_dependencies:
