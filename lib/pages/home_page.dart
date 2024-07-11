@@ -19,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   final Map<DateTime, List<WorkoutInstance>> _workoutInstances = {};
   final Map<String, Map<String, double>> _volumeByMuscleGroup = {};
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
-  TimeFrame _selectedTimeFrame = TimeFrame.week;
+  TimeFrame _selectedTimeFrame = TimeFrame.month;
   
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
@@ -68,24 +68,28 @@ class _HomePageState extends State<HomePage> {
     _volumeByMuscleGroup.clear();
 
     for (final instance in instances) {
-      final date = DateTime(instance.createdAt.year, instance.createdAt.month, instance.createdAt.day);
-      _workoutInstances.putIfAbsent(date, () => []).add(instance);
+      final date = instance.createdAt; 
+      final dateKey = DateTime(date.year, date.month, date.day);
+      _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
 
       final monthWeekKey = _getMonthWeekKey(date);
       for (final exercise in instance.exercises) {
         final muscleGroup = exercise.muscleGroup;
-        _volumeByMuscleGroup
-          .putIfAbsent(muscleGroup, () => {})
-          .update(monthWeekKey, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+        if (muscleGroup != 'unknown') {
+          _volumeByMuscleGroup
+            .putIfAbsent(muscleGroup, () => {})
+            .update(monthWeekKey, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+        }
       }
     }
   }
 
   String _getMonthWeekKey(DateTime date) {
     final monthName = DateFormat('MMMM').format(date);
-    final weekNumber = (date.day - 1) ~/ 7 + 1;
+    final weekNumber = ((date.day - 1) / 7).floor() + 1;
     return '$monthName Week $weekNumber ${date.year}';
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -153,10 +157,8 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Padding(
           padding: const EdgeInsets.all(16.0),
-
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -296,17 +298,16 @@ class _HomePageState extends State<HomePage> {
     data.forEach((key, value) {
       final parts = key.split(' ');
       final month = parts[0];
-      final weekOrYear = parts[1];
-      final year = parts[2];
+      final weekNumber = int.parse(parts[2]);
+      final year = int.parse(parts[3]);
 
-      if (timeFrame == TimeFrame.week && weekOrYear.startsWith('Week')) {
-        final weekNumber = int.tryParse(weekOrYear.replaceFirst('Week', '').trim()) ?? 0;
-        final weekKey = 'Week $weekNumber';
+      if (timeFrame == TimeFrame.week) {
+        final weekKey = 'Week $weekNumber of $month';
         result.update(weekKey, (v) => v + value, ifAbsent: () => value);
       } else if (timeFrame == TimeFrame.month) {
         result.update(month, (v) => v + value, ifAbsent: () => value);
       } else if (timeFrame == TimeFrame.year) {
-        result.update('Year $year', (v) => v + value, ifAbsent: () => value);
+        result.update(year.toString(), (v) => v + value, ifAbsent: () => value);
       }
     });
 
@@ -314,6 +315,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _getShortLabel(String label) {
+    if (label.startsWith('Week')) {
+      final parts = label.split(' ');
+      return 'W${parts[1]}';
+    } else if (label.length == 4 && int.tryParse(label) != null) {
+      return label;
+    }
     return label.split(' ').map((word) => word[0]).join('');
   }
 }
