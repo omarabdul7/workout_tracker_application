@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 enum TimeFrame { week, month, year }
+enum ViewType { volume, sets }
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -18,8 +19,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final Map<DateTime, List<WorkoutInstance>> _workoutInstances = {};
   final Map<String, Map<String, double>> _volumeByMuscleGroup = {};
+  final Map<String, Map<String, int>> _setsByMuscleGroup = {};
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   TimeFrame _selectedTimeFrame = TimeFrame.month;
+  ViewType _selectedViewType = ViewType.volume;
   
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
@@ -66,9 +69,10 @@ class _HomePageState extends State<HomePage> {
   void _processWorkoutInstances(List<WorkoutInstance> instances) {
     _workoutInstances.clear();
     _volumeByMuscleGroup.clear();
+    _setsByMuscleGroup.clear();
 
     for (final instance in instances) {
-      final date = instance.createdAt; 
+      final date = instance.createdAt;
       final dateKey = DateTime(date.year, date.month, date.day);
       _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
 
@@ -79,6 +83,10 @@ class _HomePageState extends State<HomePage> {
           _volumeByMuscleGroup
             .putIfAbsent(muscleGroup, () => {})
             .update(monthWeekKey, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+          
+          _setsByMuscleGroup
+            .putIfAbsent(muscleGroup, () => {})
+            .update(monthWeekKey, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
         }
       }
     }
@@ -89,7 +97,6 @@ class _HomePageState extends State<HomePage> {
     final weekNumber = ((date.day - 1) / 7).floor() + 1;
     return '$monthName Week $weekNumber ${date.year}';
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +124,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _buildCalendar(),
           const SizedBox(height: 20),
-          _buildVolumeComparison(),
+          _buildMuscleGroupComparison(),
         ],
       ),
     );
@@ -153,78 +160,111 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildVolumeComparison() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Volume by Muscle Group',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              DropdownButton<TimeFrame>(
-                value: _selectedTimeFrame,
-                onChanged: (TimeFrame? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedTimeFrame = newValue;
-                    });
-                  }
-                },
-                items: TimeFrame.values.map((TimeFrame timeFrame) {
-                  return DropdownMenuItem<TimeFrame>(
-                    value: timeFrame,
-                    child: Text(timeFrame.toString().split('.').last.capitalize()),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-        ..._buildMuscleGroupCards(),
-      ],
-    );
-  }
-
-  List<Widget> _buildMuscleGroupCards() {
-    final sortedMuscleGroups = _volumeByMuscleGroup.entries.toList()
-      ..sort((a, b) => b.value.values.reduce((sum, element) => sum + element)
-          .compareTo(a.value.values.reduce((sum, element) => sum + element)));
-
-    return sortedMuscleGroups.map((entry) {
-      final muscleGroup = entry.key;
-      final volumeData = entry.value;
-      final aggregatedData = _aggregateData(volumeData, _selectedTimeFrame);
-      final sortedAggregatedData = aggregatedData.entries.toList()
-        ..sort((a, b) => a.key.compareTo(b.key));
-
-      final totalVolume = aggregatedData.values.reduce((sum, element) => sum + element);
-
-      return Card(
-        color: const Color.fromARGB(255, 241, 246, 249),
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: ExpansionTile(
-          title: Text('$muscleGroup - Total: ${totalVolume.toStringAsFixed(2)} lbs',
-              style: Theme.of(context).textTheme.titleMedium),
+Widget _buildMuscleGroupComparison() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column( 
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                height: 200,
-                child: _buildChart(sortedAggregatedData),
-              ),
+            Text(
+              _selectedViewType == ViewType.volume
+                  ? 'Volume by Muscle Group'
+                  : 'Sets by Muscle Group',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            ..._buildVolumeList(sortedAggregatedData),
+            const SizedBox(height: 8), 
+            Row(
+              children: [
+                DropdownButton<ViewType>(
+                  value: _selectedViewType,
+                  onChanged: (ViewType? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedViewType = newValue;
+                      });
+                    }
+                  },
+                  items: ViewType.values.map((ViewType viewType) {
+                    return DropdownMenuItem<ViewType>(
+                      value: viewType,
+                      child: Text(viewType.toString().split('.').last.capitalize()),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(width: 16),
+                DropdownButton<TimeFrame>(
+                  value: _selectedTimeFrame,
+                  onChanged: (TimeFrame? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedTimeFrame = newValue;
+                      });
+                    }
+                  },
+                  items: TimeFrame.values.map((TimeFrame timeFrame) {
+                    return DropdownMenuItem<TimeFrame>(
+                      value: timeFrame,
+                      child: Text(timeFrame.toString().split('.').last.capitalize()),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ],
         ),
-      );
-    }).toList();
-  }
+      ),
+      ..._buildMuscleGroupCards(),
+    ],
+  );
+}
 
+
+List<Widget> _buildMuscleGroupCards() {
+  final data = _selectedViewType == ViewType.volume
+      ? _volumeByMuscleGroup
+      : _setsByMuscleGroup;
+
+  final sortedMuscleGroups = data.entries.toList()
+    ..sort((a, b) {
+      double sumA = a.value.values.fold(0.0, (sum, element) => sum + element.toDouble());
+      double sumB = b.value.values.fold(0.0, (sum, element) => sum + element.toDouble());
+      return sumB.compareTo(sumA);
+    });
+
+  return sortedMuscleGroups.map((entry) {
+    final muscleGroup = entry.key;
+    final muscleData = entry.value;
+    final aggregatedData = _aggregateData(muscleData, _selectedTimeFrame);
+    final sortedAggregatedData = aggregatedData.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    final total = aggregatedData.values.reduce((sum, element) => sum + element);
+
+    return Card(
+      color: const Color.fromARGB(255, 241, 246, 249),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: ExpansionTile(
+        title: Text(
+          '$muscleGroup - Total: ${_selectedViewType == ViewType.volume ? '${total.toStringAsFixed(2)} lbs' : '${total.toInt()} sets'}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              height: 200,
+              child: _buildChart(sortedAggregatedData),
+            ),
+          ),
+          ..._buildDataList(sortedAggregatedData),
+        ],
+      ),
+    );
+  }).toList();
+}
   Widget _buildChart(List<MapEntry<String, double>> data) {
     return BarChart(
       BarChartData(
@@ -268,12 +308,12 @@ class _HomePageState extends State<HomePage> {
         borderData: FlBorderData(show: false),
         barGroups: data.asMap().entries.map((entry) {
           final index = entry.key;
-          final volume = entry.value.value;
+          final value = entry.value.value;
           return BarChartGroupData(
             x: index,
             barRods: [
               BarChartRodData(
-                toY: volume,
+                toY: value,
                 color: Colors.lightBlue,
                 width: 20,
               ),
@@ -284,15 +324,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<Widget> _buildVolumeList(List<MapEntry<String, double>> sortedAggregatedData) {
+  List<Widget> _buildDataList(List<MapEntry<String, double>> sortedAggregatedData) {
     return sortedAggregatedData.map((entry) {
       return ListTile(
-        title: Text('${entry.key}: ${entry.value.toStringAsFixed(2)} lbs'),
+        title: Text(
+          '${entry.key}: ${_selectedViewType == ViewType.volume ? '${entry.value.toStringAsFixed(2)} lbs' : '${entry.value.toInt()} sets'}',
+        ),
       );
     }).toList();
   }
 
-  Map<String, double> _aggregateData(Map<String, double> data, TimeFrame timeFrame) {
+  Map<String, double> _aggregateData(Map<String, dynamic> data, TimeFrame timeFrame) {
     final result = <String, double>{};
 
     data.forEach((key, value) {
@@ -303,11 +345,11 @@ class _HomePageState extends State<HomePage> {
 
       if (timeFrame == TimeFrame.week) {
         final weekKey = 'Week $weekNumber of $month';
-        result.update(weekKey, (v) => v + value, ifAbsent: () => value);
+        result.update(weekKey, (v) => v + value.toDouble(), ifAbsent: () => value.toDouble());
       } else if (timeFrame == TimeFrame.month) {
-        result.update(month, (v) => v + value, ifAbsent: () => value);
+        result.update(month, (v) => v + value.toDouble(), ifAbsent: () => value.toDouble());
       } else if (timeFrame == TimeFrame.year) {
-        result.update(year.toString(), (v) => v + value, ifAbsent: () => value);
+        result.update(year.toString(), (v) => v + value.toDouble(), ifAbsent: () => value.toDouble());
       }
     });
 
