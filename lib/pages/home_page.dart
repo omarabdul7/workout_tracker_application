@@ -17,12 +17,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Map<DateTime, List<WorkoutInstance>> _workoutInstances = {};
-  final Map<String, Map<String, double>> _volumeByMuscleGroup = {};
-  final Map<String, Map<String, int>> _setsByMuscleGroup = {};
+  final Map<String, Map<String, num>> _volumeByMuscleGroup = {};
+  final Map<String, Map<String, num>> _setsByMuscleGroup = {};
   final RefreshController _refreshController = RefreshController(initialRefresh: false);
   TimeFrame _selectedTimeFrame = TimeFrame.month;
   ViewType _selectedViewType = ViewType.volume;
-  
+
   bool _isLoading = false;
   String? _error;
 
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
           _volumeByMuscleGroup
             .putIfAbsent(muscleGroup, () => {})
             .update(monthWeekKey, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
-          
+
           _setsByMuscleGroup
             .putIfAbsent(muscleGroup, () => {})
             .update(monthWeekKey, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
@@ -193,8 +193,10 @@ class _HomePageState extends State<HomePage> {
 
     final sortedMuscleGroups = data.entries.toList()
       ..sort((a, b) {
-        double sumA = a.value.values.fold(0.0, (sum, element) => sum + element.toDouble());
-        double sumB = b.value.values.fold(0.0, (sum, element) => sum + element.toDouble());
+        final aggregatedDataA = _aggregateData(a.value, _selectedTimeFrame);
+        final aggregatedDataB = _aggregateData(b.value, _selectedTimeFrame);
+        double sumA = _calculateTotal(aggregatedDataA);
+        double sumB = _calculateTotal(aggregatedDataB);
         return sumB.compareTo(sumA);
       });
 
@@ -203,17 +205,23 @@ class _HomePageState extends State<HomePage> {
       final muscleData = entry.value;
       final aggregatedData = _aggregateData(muscleData, _selectedTimeFrame);
       final sortedAggregatedData = aggregatedData.entries.toList()
-        ..sort((a, b) => a.key.compareTo(b.key));
+        ..sort((a, b) => _parseDate(a.key).compareTo(_parseDate(b.key)));
 
-      final total = aggregatedData.values.reduce((sum, element) => sum + element);
+      final percentageChange = _calculatePercentageChange(sortedAggregatedData);
 
       return Card(
         color: const Color.fromARGB(255, 241, 246, 249),
         margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: ExpansionTile(
           title: Text(
-            '$muscleGroup - Total: ${_selectedViewType == ViewType.volume ? '${total.toStringAsFixed(2)} lbs' : '${total.toInt()} sets'}',
+            muscleGroup,
             style: Theme.of(context).textTheme.titleMedium,
+          ),
+          subtitle: Text(
+            _formatPercentageChange(percentageChange),
+            style: TextStyle(
+              color: percentageChange >= 0 ? Colors.green : Colors.red,
+            ),
           ),
           children: [
             Padding(
@@ -230,11 +238,15 @@ class _HomePageState extends State<HomePage> {
     }).toList();
   }
 
-  Widget _buildChart(List<MapEntry<String, double>> data) {
+  Widget _buildChart(List<MapEntry<String, num>> data) {
+    if (data.isEmpty) {
+      return const Center(child: Text('No data available for this time frame'));
+    }
+
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: data.map((e) => e.value).reduce((max, v) => max > v ? max : v) * 1.2,
+        maxY: data.map((e) => e.value.toDouble()).reduce((max, v) => max > v ? max : v) * 1.2,
         barTouchData: BarTouchData(enabled: false),
         titlesData: FlTitlesData(
           show: true,
@@ -278,8 +290,8 @@ class _HomePageState extends State<HomePage> {
             x: index,
             barRods: [
               BarChartRodData(
-                toY: value,
-                color: const Color(0xFF4CAF50),
+                toY: value.toDouble(),
+                color: Colors.lightBlueAccent,
                 width: 16,
               ),
             ],
@@ -289,56 +301,90 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<Widget> _buildDataList(List<MapEntry<String, double>> data) {
-    return data.map((entry) {
-      return ListTile(
-        title: Text(
-          entry.key,
-          style: const TextStyle(fontSize: 14),
-        ),
-        trailing: Text(
-          '${_selectedViewType == ViewType.volume ? entry.value.toStringAsFixed(2) + ' lbs' : entry.value.toInt().toString() + ' sets'}',
-          style: const TextStyle(fontSize: 14),
-        ),
-      );
-    }).toList();
-  }
-
   String _getShortLabel(String label) {
     final parts = label.split(' ');
-    if (parts.length > 2) {
+    if (parts.length >= 2) {
       return '${parts[0]} ${parts[1]}';
     }
     return label;
   }
-Map<String, double> _aggregateData(Map<String, num> data, TimeFrame timeFrame) {
-  final Map<String, double> aggregatedData = {};
 
-  data.forEach((key, value) {
-    final castedValue = value.toDouble();
+  double _calculateTotal(Map<String, num> data) {
+    return data.values.fold(0.0, (sum, value) => sum + value);
+  }
+
+  DateTime _parseDate(String dateStr) {
+    final parts = dateStr.split(' ');
+    if (parts.length == 4) {
+      final month = DateFormat.MMMM().parse(parts[0]).month;
+      final week = int.parse(parts[2]);
+      final year = int.parse(parts[3]);
+      // Calculate the first day of the given week in the month
+      final firstDayOfMonth = DateTime(year, month, 1);
+      final daysToAdd = (week - 1) * 7 - firstDayOfMonth.weekday + 1;
+      return firstDayOfMonth.add(Duration(days: daysToAdd));
+    }
+    return DateTime.now(); // Default to current date if parsing fails
+  }
+
+  DateTime _getCutoffDate(DateTime now, TimeFrame timeFrame) {
     switch (timeFrame) {
       case TimeFrame.week:
-        aggregatedData[key] = castedValue;
-        break;
+        return now.subtract(const Duration(days: 7));
       case TimeFrame.month:
-        final monthKey = key.split(' ').sublist(0, 2).join(' ');
-        aggregatedData.update(monthKey, (existing) => existing + castedValue, ifAbsent: () => castedValue);
-        break;
+        return DateTime(now.year, now.month - 1, now.day);
       case TimeFrame.year:
-        final yearKey = key.split(' ').last;
-        aggregatedData.update(yearKey, (existing) => existing + castedValue, ifAbsent: () => castedValue);
-        break;
+        return DateTime(now.year - 1, now.month, now.day);
     }
-  });
+  }
 
-  return aggregatedData;
-}
-}
-extension StringExtension on String {
-  String capitalize() {
-    if (this == null) {
-      return this;
+  Map<String, num> _aggregateData(Map<String, num> data, TimeFrame timeFrame) {
+    final now = DateTime.now();
+    final cutoffDate = _getCutoffDate(now, timeFrame);
+
+    return Map.fromEntries(data.entries.where((entry) {
+      final entryDate = _parseDate(entry.key);
+      switch (timeFrame) {
+        case TimeFrame.week:
+          return entryDate.isAfter(cutoffDate);
+        case TimeFrame.month:
+          return entryDate.year == now.year && entryDate.month == now.month;
+        case TimeFrame.year:
+          return entryDate.year == now.year;
+      }
+    }));
+  }
+
+  double _calculatePercentageChange(List<MapEntry<String, num>> sortedData) {
+    if (sortedData.length >= 2) {
+      final latestValue = sortedData.last.value.toDouble();
+      final previousValue = sortedData[sortedData.length - 2].value.toDouble();
+
+      if (previousValue != 0) {
+        return ((latestValue - previousValue) / previousValue) * 100;
+      }
     }
-    return '${this[0].toUpperCase()}${this.substring(1).toLowerCase()}';
+    return 0.0;
+  }
+
+  String _formatPercentageChange(double percentageChange) {
+    return '${percentageChange >= 0 ? '+' : ''}${percentageChange.toStringAsFixed(2)}%';
+  }
+
+  List<Widget> _buildDataList(List<MapEntry<String, num>> data) {
+    return data.map((entry) {
+      final label = entry.key;
+      final value = entry.value;
+      return ListTile(
+        title: Text(label),
+        trailing: Text(value.toString()),
+      );
+    }).toList();
   }
 }
+
+extension StringExtension on String {
+  String capitalize() {
+    return this[0].toUpperCase() + substring(1);
+  }
+} 
