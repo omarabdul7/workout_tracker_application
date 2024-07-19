@@ -17,7 +17,7 @@ class CreateWorkoutTemplateState extends State<CreateWorkoutTemplate> {
 
   final _exerciseController = TextEditingController();
   final _setsController = TextEditingController();
-final _restPeriodController = TextEditingController();
+  final _restPeriodController = TextEditingController();
 
 void _addExercise() {
   final exerciseName = _exerciseController.text.trim();
