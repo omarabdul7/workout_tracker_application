@@ -14,7 +14,7 @@ class NewWorkoutInstancePage extends StatefulWidget {
   NewWorkoutInstancePageState createState() => NewWorkoutInstancePageState();
 }
 
-class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
+class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final List<ExerciseInstance> _exerciseInstances = [];
   WorkoutInstance? _lastWorkoutInstance;
@@ -23,10 +23,12 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   int _timerSeconds = 0;
   int _timerMilliseconds = 0;
   late int _currentExerciseRestPeriod;
+  late DateTime _lastPausedTime;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDataFuture = _loadLastWorkoutInstance();
     _startTimer();
     _currentExerciseRestPeriod = widget.workout.exercises.first.restPeriod;
@@ -35,7 +37,17 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   @override
   void dispose() {
     _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _pauseTimer();
+    } else if (state == AppLifecycleState.resumed) {
+      _resumeTimer();
+    }
   }
 
   Future<void> _loadLastWorkoutInstance() async {
@@ -111,6 +123,28 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
     });
   }
 
+  void _pauseTimer() {
+    _lastPausedTime = DateTime.now();
+    _timer?.cancel();
+  }
+
+  void _resumeTimer() {
+    final durationPaused = DateTime.now().difference(_lastPausedTime);
+    final pausedMilliseconds = durationPaused.inMilliseconds;
+
+    setState(() {
+      _timerMilliseconds += pausedMilliseconds % 1000;
+      _timerSeconds += pausedMilliseconds ~/ 1000;
+
+      if (_timerMilliseconds >= 1000) {
+        _timerSeconds++;
+        _timerMilliseconds -= 1000;
+      }
+    });
+
+    _startTimer();
+  }
+
   void _resetTimer(int restPeriod) {
     setState(() {
       _timerSeconds = 0;
@@ -128,37 +162,37 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   }
 
   Future<String?> _showAddExerciseDialog() async {
-  String? exerciseName;
-  return showDialog<String>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Add New Exercise'),
-        content: TextField(
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Enter exercise name'),
-          onChanged: (value) {
-            exerciseName = value;
-          },
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () {
-              Navigator.of(context).pop();
+    String? exerciseName;
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add New Exercise'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Enter exercise name'),
+            onChanged: (value) {
+              exerciseName = value;
             },
           ),
-          TextButton(
-            child: const Text('Add'),
-            onPressed: () {
-              Navigator.of(context).pop(exerciseName);
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () {
+                Navigator.of(context).pop(exerciseName);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _addExercise() async {
     final exerciseName = await _showAddExerciseDialog();
@@ -275,7 +309,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
       children: [
         Text(
           exercise.name,
-          style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         Row(
           children: [
@@ -285,7 +319,9 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
             ),
             IconButton(
               icon: const Icon(Icons.arrow_downward),
-              onPressed: exerciseIndex < _exerciseInstances.length - 1 ? () => _moveExercise(exerciseIndex, exerciseIndex + 1) : null,
+              onPressed: exerciseIndex < _exerciseInstances.length - 1
+                  ? () => _moveExercise(exerciseIndex, exerciseIndex + 1)
+                  : null,
             ),
             IconButton(
               icon: const Icon(Icons.delete),
@@ -298,13 +334,13 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   }
 
   Widget _buildPreviousWorkoutInfo(ExerciseInstance exercise) {
-    final previousExercise = _lastWorkoutInstance?.exercises.firstWhere(
+    final lastExerciseInstance = _lastWorkoutInstance?.exercises.firstWhere(
       (e) => e.name == exercise.name,
       orElse: () => ExerciseInstance(name: exercise.name, sets: []),
     );
 
-    if (previousExercise == null || previousExercise.sets.isEmpty) {
-      return const Text('No previous data available', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic));
+    if (lastExerciseInstance == null || lastExerciseInstance.sets.isEmpty) {
+      return const SizedBox.shrink();
     }
 
     return Column(
@@ -312,7 +348,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
       children: [
         const Text('Previous Workout', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        ...previousExercise.sets.map((set) => Padding(
+        ...lastExerciseInstance.sets.map((set) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
             'Set ${set.setNumber}: ${set.weight} lb x ${set.reps} reps',
@@ -376,33 +412,37 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> {
   }
 
   Widget _buildAddSetButton(int exerciseIndex) {
-    return TextButton.icon(
-      onPressed: () => _addSet(exerciseIndex),
-      icon: const Icon(Icons.add),
-      label: const Text('Add Set'),
+    return TextButton(
+      onPressed: () {
+        _addSet(exerciseIndex);
+        _resetTimer(_currentExerciseRestPeriod);
+      },
+      child: const Text('Add Set'),
     );
   }
 
-Widget _buildAddExerciseButton() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16.0),
-    child: ElevatedButton.icon(
+  Widget _buildAddExerciseButton() {
+    return TextButton(
       onPressed: _addExercise,
-      icon: const Icon(Icons.add),
-      label: const Text('Add Exercise'),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-      ),
-    ),
-  );
-}
+      child: const Text('Add Exercise'),
+    );
+  }
 
   Widget _buildTimer() {
-    return Text(
-      'Timer: $_timerSeconds.${(_timerMilliseconds / 100).floor()}s',
-      style: TextStyle(
-        color: _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black,
+    final minutes = _timerSeconds ~/ 60;
+    final seconds = _timerSeconds % 60;
+    final milliseconds = _timerMilliseconds ~/ 100;
+
+    final timerColor = _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        'Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}:${milliseconds.toString().padLeft(1, '0')}',
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: timerColor),
+        textAlign: TextAlign.center,
       ),
     );
   }
+
 }
