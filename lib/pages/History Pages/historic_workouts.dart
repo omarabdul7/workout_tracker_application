@@ -20,39 +20,44 @@ class HistoricWorkout extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              workoutInstance.name,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        child: SingleChildScrollView(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  workoutInstance.name,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Date: ${formatDateTime(workoutInstance.createdAt)}',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                SizedBox(height: 16),
+                ...workoutInstance.exercises.map((exercise) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exercise.name,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      ...exercise.sets.map((set) {
+                        return Text(
+                          'Set ${set.setNumber}: ${set.weight} lbs x ${set.reps} reps',
+                          style: TextStyle(fontSize: 16),
+                        );
+                      }).toList(),
+                      SizedBox(height: 16),
+                    ],
+                  );
+                }).toList(),
+              ],
             ),
-            SizedBox(height: 8),
-            Text(
-              'Date: ${formatDateTime(workoutInstance.createdAt)}',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            SizedBox(height: 16),
-            ...workoutInstance.exercises.map((exercise) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    exercise.name,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  ...exercise.sets.map((set) {
-                    return Text(
-                      'Set ${set.setNumber}: ${set.weight} lbs x ${set.reps} reps',
-                      style: TextStyle(fontSize: 16),
-                    );
-                  }).toList(),
-                  SizedBox(height: 16),
-                ],
-              );
-            }).toList(),
-          ],
+          ),
         ),
       ),
     );
