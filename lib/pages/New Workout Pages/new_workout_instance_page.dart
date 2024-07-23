@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '/models/workout.dart';
-import 'dart:async';
 import '/models/workout_instance.dart';
 import '/services/workout_instance_service.dart';
 import '/models/exercise.dart';
+import '/widgets/exercise_instance_widget.dart';
+import '/widgets/timer_widget.dart';
+
 
 class NewWorkoutInstancePage extends StatefulWidget {
   final Workout workout;
@@ -19,36 +21,23 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   final List<ExerciseInstance> _exerciseInstances = [];
   WorkoutInstance? _lastWorkoutInstance;
   late Future<void> _loadDataFuture;
-  Timer? _timer;
-  int _timerSeconds = 0;
-  int _timerMilliseconds = 0;
-  late int _currentExerciseRestPeriod;
-  late DateTime _lastPausedTime;
+  int _currentExerciseRestPeriod = 0;
+  final TimerWidgetState _timerWidgetState = TimerWidgetState();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadDataFuture = _loadLastWorkoutInstance();
-    _startTimer();
     _currentExerciseRestPeriod = widget.workout.exercises.first.restPeriod;
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _pauseTimer();
-    } else if (state == AppLifecycleState.resumed) {
-      _resumeTimer();
-    }
-  }
 
   Future<void> _loadLastWorkoutInstance() async {
     _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
@@ -111,45 +100,9 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     });
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        _timerMilliseconds += 100;
-        if (_timerMilliseconds >= 1000) {
-          _timerSeconds++;
-          _timerMilliseconds = 0;
-        }
-      });
-    });
-  }
-
-  void _pauseTimer() {
-    _lastPausedTime = DateTime.now();
-    _timer?.cancel();
-  }
-
-  void _resumeTimer() {
-    final durationPaused = DateTime.now().difference(_lastPausedTime);
-    final pausedMilliseconds = durationPaused.inMilliseconds;
-
+  void _deleteExercise(int index) {
     setState(() {
-      _timerMilliseconds += pausedMilliseconds % 1000;
-      _timerSeconds += pausedMilliseconds ~/ 1000;
-
-      if (_timerMilliseconds >= 1000) {
-        _timerSeconds++;
-        _timerMilliseconds -= 1000;
-      }
-    });
-
-    _startTimer();
-  }
-
-  void _resetTimer(int restPeriod) {
-    setState(() {
-      _timerSeconds = 0;
-      _timerMilliseconds = 0;
-      _currentExerciseRestPeriod = restPeriod;
+      _exerciseInstances.removeAt(index);
     });
   }
 
@@ -159,6 +112,20 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       final newSet = SetDetails(setNumber: exercise.sets.length + 1, weight: 0.0, reps: 0);
       exercise.sets.add(newSet);
     });
+    _resetTimer(_currentExerciseRestPeriod);
+  }
+
+  void _deleteSet(int exerciseIndex, int setIndex) {
+    setState(() {
+      _exerciseInstances[exerciseIndex].sets.removeAt(setIndex);
+      _renumberSets(_exerciseInstances[exerciseIndex]);
+    });
+  }
+
+  void _renumberSets(ExerciseInstance exercise) {
+    for (int i = 0; i < exercise.sets.length; i++) {
+      exercise.sets[i].setNumber = i + 1;
+    }
   }
 
   Future<String?> _showAddExerciseDialog() async {
@@ -206,23 +173,11 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     }
   }
 
-  void _deleteExercise(int index) {
+  void _resetTimer(int restPeriod) {
     setState(() {
-      _exerciseInstances.removeAt(index);
+      _currentExerciseRestPeriod = restPeriod;
     });
-  }
-
-  void _deleteSet(int exerciseIndex, int setIndex) {
-    setState(() {
-      _exerciseInstances[exerciseIndex].sets.removeAt(setIndex);
-      _renumberSets(_exerciseInstances[exerciseIndex]);
-    });
-  }
-
-  void _renumberSets(ExerciseInstance exercise) {
-    for (int i = 0; i < exercise.sets.length; i++) {
-      exercise.sets[i].setNumber = i + 1;
-    }
+    _timerWidgetState.resetTimer();
   }
 
   @override
@@ -264,160 +219,32 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
                 key: _formKey,
                 child: Column(
                   children: [
-                    ..._exerciseInstances.map(_buildExerciseCard).toList(),
+                    ..._exerciseInstances.map((exercise) => ExerciseInstanceWidget(
+                      exercise: exercise,
+                      exerciseIndex: _exerciseInstances.indexOf(exercise),
+                      templateExercise: widget.workout.exercises.firstWhere(
+                        (e) => e.name == exercise.name,
+                        orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
+                      ),
+                      lastWorkoutInstance: _lastWorkoutInstance,
+                      onMoveExercise: _moveExercise,
+                      onDeleteExercise: _deleteExercise,
+                      onAddSet: _addSet,
+                      onDeleteSet: _deleteSet,
+                      onSetChanged: () => _resetTimer(_currentExerciseRestPeriod),
+                    )).toList(),
                     _buildAddExerciseButton(),
                   ],
                 ),
               ),
             ),
           ),
-          _buildTimer(),
+          TimerWidget(
+            key: Key('timer_widget'),
+            currentExerciseRestPeriod: _currentExerciseRestPeriod,
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildExerciseCard(ExerciseInstance exercise) {
-    final exerciseIndex = _exerciseInstances.indexOf(exercise);
-    final templateExercise = widget.workout.exercises.firstWhere(
-      (e) => e.name == exercise.name,
-      orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
-    );
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      color: const Color.fromARGB(255, 241, 246, 249),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildExerciseHeader(exercise, exerciseIndex),
-            const SizedBox(height: 8),
-            _buildPreviousWorkoutInfo(exercise),
-            ...exercise.sets.map((set) => _buildSetRow(set, exerciseIndex, templateExercise)).toList(),
-            _buildAddSetButton(exerciseIndex),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExerciseHeader(ExerciseInstance exercise, int exerciseIndex) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          exercise.name,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_upward),
-              onPressed: exerciseIndex > 0 ? () => _moveExercise(exerciseIndex, exerciseIndex - 1) : null,
-            ),
-            IconButton(
-              icon: const Icon(Icons.arrow_downward),
-              onPressed: exerciseIndex < _exerciseInstances.length - 1
-                  ? () => _moveExercise(exerciseIndex, exerciseIndex + 1)
-                  : null,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteExercise(exerciseIndex),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreviousWorkoutInfo(ExerciseInstance exercise) {
-    final lastExerciseInstance = _lastWorkoutInstance?.exercises.firstWhere(
-      (e) => e.name == exercise.name,
-      orElse: () => ExerciseInstance(name: exercise.name, sets: []),
-    );
-
-    if (lastExerciseInstance == null || lastExerciseInstance.sets.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Previous Workout', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ...lastExerciseInstance.sets.map((set) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Text(
-            'Set ${set.setNumber}: ${set.weight} lb x ${set.reps} reps',
-            style: const TextStyle(color: Colors.black),
-          ),
-        )),
-        const Divider(thickness: 1),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  Widget _buildSetRow(SetDetails set, int exerciseIndex, Exercise templateExercise) {
-    final setIndex = _exerciseInstances[exerciseIndex].sets.indexOf(set);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                decoration: InputDecoration(labelText: 'Set ${set.setNumber} - lbs'),
-                keyboardType: TextInputType.number,
-                initialValue: set.weight.toString(),
-                onChanged: (value) {
-                  set.weight = double.tryParse(value) ?? 0.0;
-                  _resetTimer(templateExercise.restPeriod);
-                },
-                validator: (value) => (value == null || value.isEmpty) ? 'Enter weight' : null,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                decoration: const InputDecoration(labelText: 'Reps'),
-                keyboardType: TextInputType.number,
-                initialValue: set.reps.toString(),
-                onChanged: (value) {
-                  set.reps = int.tryParse(value) ?? 0;
-                  _resetTimer(templateExercise.restPeriod);
-                },
-                validator: (value) => (value == null || value.isEmpty) ? 'Enter reps' : null,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteSet(exerciseIndex, setIndex),
-            ),
-          ],
-        ),
-        if (set.setNumber < templateExercise.sets)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              'Rest Period: ${templateExercise.restPeriod} seconds',
-              style: const TextStyle(color: Colors.black, fontStyle: FontStyle.italic),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildAddSetButton(int exerciseIndex) {
-    return TextButton(
-      onPressed: () {
-        _addSet(exerciseIndex);
-        _resetTimer(_currentExerciseRestPeriod);
-      },
-      child: const Text('Add Set'),
     );
   }
 
@@ -427,22 +254,4 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       child: const Text('Add Exercise'),
     );
   }
-
-  Widget _buildTimer() {
-    final minutes = _timerSeconds ~/ 60;
-    final seconds = _timerSeconds % 60;
-    final milliseconds = _timerMilliseconds ~/ 100;
-
-    final timerColor = _timerSeconds >= _currentExerciseRestPeriod ? Colors.red : Colors.black;
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        'Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}:${milliseconds.toString().padLeft(1, '0')}',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: timerColor),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
 }
