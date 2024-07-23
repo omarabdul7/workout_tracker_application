@@ -139,7 +139,7 @@ class ExerciseInstance {
   String get muscleGroup {
     return exerciseDetails[name.toLowerCase()]?['muscleGroup'] ?? 'unknown';
   }
-  
+
   bool get isUnilateral {
     return exerciseDetails[name.toLowerCase()]?['isUnilateral'] ?? false;
   }
@@ -148,6 +148,7 @@ class ExerciseInstance {
     double volume = sets.fold(0.0, (total, set) => total + (set.weight * set.reps));
     return isUnilateral ? volume * 2 : volume;
   }
+
 
   Map<String, dynamic> toJson() {
     return {
