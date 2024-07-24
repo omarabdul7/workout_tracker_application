@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   Map<DateTime, List<WorkoutInstance>> _workoutInstances = {};
   Map<String, Map<String, num>> _volumeByMuscleGroup = {};
   Map<String, Map<String, num>> _setsByMuscleGroup = {};
+  Map<String, Map<String, double>> _oneRepMaxByMuscleGroup= {};
 
   TimeFrame _selectedTimeFrame = TimeFrame.month;
   ViewType _selectedViewType = ViewType.volume;
@@ -66,6 +67,7 @@ class _HomePageState extends State<HomePage> {
     _workoutInstances = {};
     _volumeByMuscleGroup = {};
     _setsByMuscleGroup = {};
+    _oneRepMaxByMuscleGroup = {};
 
     for (final instance in instances) {
       final date = instance.createdAt;
@@ -84,8 +86,24 @@ class _HomePageState extends State<HomePage> {
             .putIfAbsent(muscleGroup, () => {})
             .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
         }
+
+        double maxOneRepMax = 0;
+        for (final set in exercise.sets) {
+          double oneRepMax = calculateOneRepMax(set.weight, set.reps);
+          if (oneRepMax > maxOneRepMax) {
+            maxOneRepMax = oneRepMax;
+          }
+        }
+
+        _oneRepMaxByMuscleGroup
+          .putIfAbsent(exercise.name, () => {})
+          .update(dateStr, (value) => value > maxOneRepMax ? value : maxOneRepMax, ifAbsent: () => maxOneRepMax);
       }
     }
+  }
+
+  double calculateOneRepMax(double weight, int reps) {
+    return weight / (1.0278 - 0.0278 * reps);
   }
 
   @override
@@ -102,40 +120,41 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-Widget _buildBody() {
-  if (_isLoading) {
-    return const Center(child: CircularProgressIndicator());
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge));
+    }
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          buildMuscleGroupComparison(
+            context,
+            _selectedViewType,
+            _selectedTimeFrame,
+            _volumeByMuscleGroup,
+            _setsByMuscleGroup,
+            _oneRepMaxByMuscleGroup,
+            (ViewType? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedViewType = newValue;
+                });
+              }
+            },
+            (TimeFrame? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedTimeFrame = newValue;
+                });
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
-  if (_error != null) {
-    return Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge));
-  }
-  return SingleChildScrollView(
-    child: Column(
-      children: [
-        const SizedBox(height: 20),
-        buildMuscleGroupComparison(
-          context,
-          _selectedViewType,
-          _selectedTimeFrame,
-          _volumeByMuscleGroup,
-          _setsByMuscleGroup,
-          (dynamic newValue) {
-            if (newValue is ViewType) {
-              setState(() {
-                _selectedViewType = newValue;
-              });
-            }
-          },
-          (dynamic newValue) {
-            if (newValue is TimeFrame) {
-              setState(() {
-                _selectedTimeFrame = newValue;
-              });
-            }
-          },
-        ),
-      ],
-    ),
-  );
-}
 }

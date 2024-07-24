@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'chart.dart';
 import 'data_list.dart';
+import '../enums.dart';
 
-Widget buildMuscleGroupCard(BuildContext context, String muscleGroup, double percentageChange, List<MapEntry<String, num>> sortedAggregatedData) {
+Widget buildMuscleGroupCard(
+  BuildContext context,
+  String muscleGroup,
+  double percentageChange,
+  List<MapEntry<String, num>> sortedAggregatedData,
+  ViewType selectedViewType,
+) {
   return Card(
     color: const Color.fromARGB(255, 241, 246, 249),
     margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -22,10 +29,10 @@ Widget buildMuscleGroupCard(BuildContext context, String muscleGroup, double per
           padding: const EdgeInsets.all(16.0),
           child: SizedBox(
             height: 200,
-            child: buildChart(sortedAggregatedData),
+            child: buildChart(sortedAggregatedData, getUnit(selectedViewType)),
           ),
         ),
-        ...buildDataList(sortedAggregatedData),
+        ...buildDataList(sortedAggregatedData, getUnit(selectedViewType)),
       ],
     ),
   );
@@ -33,7 +40,18 @@ Widget buildMuscleGroupCard(BuildContext context, String muscleGroup, double per
 
 String formatPercentageChange(double percentageChange) {
   if (percentageChange.isInfinite) {
-    return percentageChange > 0 ? '+∞%' : '-∞%';
+    return percentageChange > 0 ? 'N/A' : 'N/A';
   }
-  return '${percentageChange >= 0 ? '+' : ''}${percentageChange.toStringAsFixed(2)}%';
+return '${percentageChange >= 0 ? '+' : ''}${percentageChange.toStringAsFixed(2)}%';
+}
+
+String getUnit(ViewType viewType) {
+  switch (viewType) {
+    case ViewType.volume:
+      return 'lbs';
+    case ViewType.sets:
+      return 'sets';
+    case ViewType.oneRepMax:
+      return 'lbs';
+  }
 }

@@ -149,6 +149,9 @@ class ExerciseInstance {
     return isUnilateral ? volume * 2 : volume;
   }
 
+  double calculateOneRepMax(double weight, int reps) {
+    return weight / (1.0278 - 0.0278 * reps);
+  }
 
   Map<String, dynamic> toJson() {
     return {
