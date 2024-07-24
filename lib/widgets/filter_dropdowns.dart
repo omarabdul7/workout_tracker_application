@@ -8,27 +8,43 @@ Widget buildFilterDropdowns(
   Function(TimeFrame?) onTimeFrameChanged,
 ) {
   return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       DropdownButton<ViewType>(
         value: selectedViewType,
         onChanged: onViewTypeChanged,
-        items: ViewType.values.map((ViewType viewType) {
-          return DropdownMenuItem<ViewType>(
-            value: viewType,
-            child: Text(viewType.toString().split('.').last),
-          );
-        }).toList(),
+        items: [
+          DropdownMenuItem(
+            value: ViewType.volume,
+            child: Text('Volume'),
+          ),
+          DropdownMenuItem(
+            value: ViewType.sets,
+            child: Text('Sets'),
+          ),
+          DropdownMenuItem(
+            value: ViewType.oneRepMax,
+            child: Text('One Rep Max'),
+          ),
+        ],
       ),
-      const SizedBox(width: 16),
       DropdownButton<TimeFrame>(
         value: selectedTimeFrame,
         onChanged: onTimeFrameChanged,
-        items: TimeFrame.values.map((TimeFrame timeFrame) {
-          return DropdownMenuItem<TimeFrame>(
-            value: timeFrame,
-            child: Text(timeFrame.toString().split('.').last),
-          );
-        }).toList(),
+        items: [
+          DropdownMenuItem(
+            value: TimeFrame.week,
+            child: Text('Week'),
+          ),
+          DropdownMenuItem(
+            value: TimeFrame.month,
+            child: Text('Month'),
+          ),
+          DropdownMenuItem(
+            value: TimeFrame.year,
+            child: Text('Year'),
+          ),
+        ],
       ),
     ],
   );

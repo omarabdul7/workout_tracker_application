@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-Widget buildChart(List<MapEntry<String, num>> data) {
+Widget buildChart(List<MapEntry<String, num>> data, String unit) {
   if (data.isEmpty) {
     return const Center(child: Text('No data available for this time frame'));
   }
@@ -36,7 +36,7 @@ Widget buildChart(List<MapEntry<String, num>> data) {
             showTitles: true,
             reservedSize: 40,
             getTitlesWidget: (value, meta) => Text(
-              value.toInt().toString(),
+              '${value.toInt()} $unit',
               style: const TextStyle(fontSize: 10),
             ),
           ),
