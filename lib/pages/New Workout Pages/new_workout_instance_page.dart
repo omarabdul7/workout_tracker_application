@@ -6,7 +6,6 @@ import '/models/exercise.dart';
 import '/widgets/exercise_instance_widget.dart';
 import '/widgets/timer_widget.dart';
 
-
 class NewWorkoutInstancePage extends StatefulWidget {
   final Workout workout;
 
@@ -22,7 +21,8 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   WorkoutInstance? _lastWorkoutInstance;
   late Future<void> _loadDataFuture;
   int _currentExerciseRestPeriod = 0;
-  final TimerWidgetState _timerWidgetState = TimerWidgetState();
+  final GlobalKey<TimerWidgetState> _timerKey = GlobalKey<TimerWidgetState>();
+  int _lastUpdatedExerciseIndex = 0;
 
   @override
   void initState() {
@@ -37,7 +37,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
-
 
   Future<void> _loadLastWorkoutInstance() async {
     _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
@@ -112,7 +111,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       final newSet = SetDetails(setNumber: exercise.sets.length + 1, weight: 0.0, reps: 0);
       exercise.sets.add(newSet);
     });
-    _resetTimer(_currentExerciseRestPeriod);
+    _updateLastExercise(exerciseIndex);
   }
 
   void _deleteSet(int exerciseIndex, int setIndex) {
@@ -120,6 +119,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       _exerciseInstances[exerciseIndex].sets.removeAt(setIndex);
       _renumberSets(_exerciseInstances[exerciseIndex]);
     });
+    _updateLastExercise(exerciseIndex);
   }
 
   void _renumberSets(ExerciseInstance exercise) {
@@ -170,6 +170,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         ]);
         _exerciseInstances.add(newExercise);
       });
+      _updateLastExercise(_exerciseInstances.length - 1);
     }
   }
 
@@ -177,7 +178,15 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     setState(() {
       _currentExerciseRestPeriod = restPeriod;
     });
-    _timerWidgetState.resetTimer();
+    _timerKey.currentState?.resetTimer();
+  }
+
+  void _updateLastExercise(int exerciseIndex) {
+    setState(() {
+      _lastUpdatedExerciseIndex = exerciseIndex;
+      _currentExerciseRestPeriod = widget.workout.exercises[exerciseIndex].restPeriod;
+    });
+    _timerKey.currentState?.resetTimer();
   }
 
   @override
@@ -219,20 +228,25 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
                 key: _formKey,
                 child: Column(
                   children: [
-                    ..._exerciseInstances.map((exercise) => ExerciseInstanceWidget(
-                      exercise: exercise,
-                      exerciseIndex: _exerciseInstances.indexOf(exercise),
-                      templateExercise: widget.workout.exercises.firstWhere(
-                        (e) => e.name == exercise.name,
-                        orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
-                      ),
-                      lastWorkoutInstance: _lastWorkoutInstance,
-                      onMoveExercise: _moveExercise,
-                      onDeleteExercise: _deleteExercise,
-                      onAddSet: _addSet,
-                      onDeleteSet: _deleteSet,
-                      onSetChanged: () => _resetTimer(_currentExerciseRestPeriod),
-                    )).toList(),
+                    ..._exerciseInstances.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final exercise = entry.value;
+                      return ExerciseInstanceWidget(
+                        exercise: exercise,
+                        exerciseIndex: index,
+                        templateExercise: widget.workout.exercises.firstWhere(
+                          (e) => e.name == exercise.name,
+                          orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
+                        ),
+                        lastWorkoutInstance: _lastWorkoutInstance,
+                        onMoveExercise: _moveExercise,
+                        onDeleteExercise: _deleteExercise,
+                        onAddSet: _addSet,
+                        onDeleteSet: _deleteSet,
+                        onSetChanged: () => _updateLastExercise(index),
+                        onResetTimer: _resetTimer,
+                      );
+                    }).toList(),
                     _buildAddExerciseButton(),
                   ],
                 ),
@@ -240,7 +254,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
             ),
           ),
           TimerWidget(
-            key: Key('timer_widget'),
+            key: _timerKey,
             currentExerciseRestPeriod: _currentExerciseRestPeriod,
           ),
         ],

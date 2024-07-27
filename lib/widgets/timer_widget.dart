@@ -4,7 +4,10 @@ import 'dart:async';
 class TimerWidget extends StatefulWidget {
   final int currentExerciseRestPeriod;
 
-  const TimerWidget({Key? key, required this.currentExerciseRestPeriod}) : super(key: key);
+  const TimerWidget({
+    Key? key,
+    required this.currentExerciseRestPeriod,
+  }) : super(key: key);
 
   @override
   TimerWidgetState createState() => TimerWidgetState();
@@ -39,10 +42,6 @@ class TimerWidgetState extends State<TimerWidget> {
     });
   }
 
-
-
-
-
   void resetTimer() {
     setState(() {
       _timerSeconds = 0;
@@ -56,13 +55,17 @@ class TimerWidgetState extends State<TimerWidget> {
     final seconds = _timerSeconds % 60;
     final milliseconds = _timerMilliseconds ~/ 100;
 
-    final timerColor = _timerSeconds >= widget.currentExerciseRestPeriod ? Colors.red : Colors.black;
+    final isRestPeriodExceeded = _timerSeconds >= widget.currentExerciseRestPeriod;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Text(
         'Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}:${milliseconds.toString().padLeft(1, '0')}',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: timerColor),
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: isRestPeriodExceeded ? Colors.red : null,
+        ),
         textAlign: TextAlign.center,
       ),
     );
