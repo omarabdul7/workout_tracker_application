@@ -5,6 +5,7 @@ import 'set_row_widget.dart';
 
 class ExerciseInstanceWidget extends StatelessWidget {
   final ExerciseInstance exercise;
+  final Function(int) onResetTimer;
   final int exerciseIndex;
   final Exercise templateExercise;
   final WorkoutInstance? lastWorkoutInstance;
@@ -25,6 +26,8 @@ class ExerciseInstanceWidget extends StatelessWidget {
     required this.onAddSet,
     required this.onDeleteSet,
     required this.onSetChanged,
+    required this.onResetTimer,
+    
   }) : super(key: key);
 
   @override
@@ -39,6 +42,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
           children: [
             _buildExerciseHeader(),
             const SizedBox(height: 8),
+            
             _buildPreviousWorkoutInfo(),
             ...exercise.sets.map((set) => SetRowWidget(
               set: set,
