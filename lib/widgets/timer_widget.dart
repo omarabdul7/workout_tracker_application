@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import '/services/timer_service.dart';
 
 class TimerWidget extends StatefulWidget {
   final int currentExerciseRestPeriod;
@@ -14,60 +14,42 @@ class TimerWidget extends StatefulWidget {
 }
 
 class TimerWidgetState extends State<TimerWidget> {
-  Timer? _timer;
-  int _timerSeconds = 0;
-  int _timerMilliseconds = 0;
+  final TimerService _timerService = TimerService();
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        _timerMilliseconds += 100;
-        if (_timerMilliseconds >= 1000) {
-          _timerSeconds++;
-          _timerMilliseconds = 0;
-        }
-      });
-    });
+    _timerService.startTimer();
   }
 
   void resetTimer() {
-    setState(() {
-      _timerSeconds = 0;
-      _timerMilliseconds = 0;
-    });
+    _timerService.resetTimer();
   }
 
   @override
   Widget build(BuildContext context) {
-    final minutes = _timerSeconds ~/ 60;
-    final seconds = _timerSeconds % 60;
-    final milliseconds = _timerMilliseconds ~/ 100;
+    return StreamBuilder<void>(
+      stream: _timerService.timerStream,
+      builder: (context, snapshot) {
+        final seconds = _timerService.currentSeconds;
+        final milliseconds = (_timerService.currentMilliseconds / 100).floor(); 
+        final minutes = seconds ~/ 60;
+        final remainingSeconds = seconds % 60;
+        final isRestPeriodExceeded = seconds >= widget.currentExerciseRestPeriod;
 
-    final isRestPeriodExceeded = _timerSeconds >= widget.currentExerciseRestPeriod;
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        'Timer: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}:${milliseconds.toString().padLeft(1, '0')}',
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: isRestPeriodExceeded ? Colors.red : null,
-        ),
-        textAlign: TextAlign.center,
-      ),
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            'Timer: ${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}.${milliseconds.toString().padLeft(1, '0')}', // Modify this line
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: isRestPeriodExceeded ? Colors.red : null,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
     );
   }
 }
