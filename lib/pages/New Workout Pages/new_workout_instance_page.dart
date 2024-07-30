@@ -5,6 +5,7 @@ import '/services/workout_instance_service.dart';
 import '/models/exercise.dart';
 import '/widgets/exercise_instance_widget.dart';
 import '/widgets/timer_widget.dart';
+import 'package:workout_tracker_application/services/timer_service.dart';
 
 class NewWorkoutInstancePage extends StatefulWidget {
   final Workout workout;
@@ -30,13 +31,17 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     WidgetsBinding.instance.addObserver(this);
     _loadDataFuture = _loadLastWorkoutInstance();
     _currentExerciseRestPeriod = widget.workout.exercises.first.restPeriod;
+    TimerService().startTimer();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    TimerService().dispose();
     super.dispose();
   }
+
+
 
   Future<void> _loadLastWorkoutInstance() async {
     _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
