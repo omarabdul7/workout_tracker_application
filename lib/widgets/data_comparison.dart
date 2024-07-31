@@ -15,6 +15,7 @@ Widget buildDataComparison(
   Map<String, Map<String, num>> volumeByMuscleGroup,
   Map<String, Map<String, num>> setsByMuscleGroup,
   Map<String, Map<String, double>> oneRepMaxByExercise,
+  List<WorkoutInstance> workoutInstances,  
   Function(ViewType?) onViewTypeChanged,
   Function(TimeFrame?) onTimeFrameChanged,
   Function(GroupBy?) onGroupByChanged,
@@ -24,15 +25,23 @@ Widget buildDataComparison(
 
   switch (selectedViewType) {
     case ViewType.volume:
-      data = selectedGroupBy == GroupBy.muscleGroup ? volumeByMuscleGroup : convertVolumeToExercise(volumeByMuscleGroup);
+      data = selectedGroupBy == GroupBy.muscleGroup 
+        ? volumeByMuscleGroup 
+        : convertVolumeToExercise(volumeByMuscleGroup, workoutInstances);
       title = 'Volume';
     case ViewType.sets:
-      data = selectedGroupBy == GroupBy.muscleGroup ? setsByMuscleGroup : convertSetsToExercise(setsByMuscleGroup);
+      data = selectedGroupBy == GroupBy.muscleGroup 
+        ? setsByMuscleGroup 
+        : convertSetsToExercise(setsByMuscleGroup, workoutInstances);
       title = 'Sets';
     case ViewType.oneRepMax:
-      data = selectedGroupBy == GroupBy.muscleGroup ? convertOneRepMaxToMuscleGroup(oneRepMaxByExercise) : oneRepMaxByExercise.map((k, v) => MapEntry(k, Map<String, num>.from(v)));
+      data = selectedGroupBy == GroupBy.muscleGroup 
+        ? convertOneRepMaxToMuscleGroup(oneRepMaxByExercise) 
+        : oneRepMaxByExercise.map((k, v) => MapEntry(k, Map<String, num>.from(v)));
       title = 'One Rep Max';
   }
+
+
 
   title += selectedGroupBy == GroupBy.muscleGroup ? ' by Muscle Group' : ' by Exercise';
 
@@ -194,34 +203,32 @@ Map<String, Map<String, num>> convertOneRepMaxToMuscleGroup(Map<String, Map<Stri
   return oneRepMaxByMuscleGroup;
 }
 
-Map<String, Map<String, num>> convertVolumeToExercise(Map<String, Map<String, num>> volumeByMuscleGroup) {
+Map<String, Map<String, num>> convertVolumeToExercise(Map<String, Map<String, num>> volumeByMuscleGroup, List<WorkoutInstance> workoutInstances) {
   Map<String, Map<String, num>> volumeByExercise = {};
   
-  volumeByMuscleGroup.forEach((muscleGroup, dateMap) {
-    dateMap.forEach((date, volume) {
-      ExerciseInstance.exerciseDetails.forEach((exercise, details) {
-        if (details['muscleGroup'] == muscleGroup) {
-          volumeByExercise.putIfAbsent(exercise, () => {})[date] = (volumeByExercise[exercise]?[date] ?? 0) + volume;
-        }
-      });
-    });
-  });
+  for (var workout in workoutInstances) {
+    for (var exercise in workout.exercises) {
+      String dateStr = DateFormat('yyyy-MM-dd').format(workout.createdAt);
+      volumeByExercise
+        .putIfAbsent(exercise.name, () => {})
+        .update(dateStr, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+    }
+  }
   
   return volumeByExercise;
 }
 
-Map<String, Map<String, num>> convertSetsToExercise(Map<String, Map<String, num>> setsByMuscleGroup) {
+Map<String, Map<String, num>> convertSetsToExercise(Map<String, Map<String, num>> setsByMuscleGroup, List<WorkoutInstance> workoutInstances) {
   Map<String, Map<String, num>> setsByExercise = {};
   
-  setsByMuscleGroup.forEach((muscleGroup, dateMap) {
-    dateMap.forEach((date, sets) {
-      ExerciseInstance.exerciseDetails.forEach((exercise, details) {
-        if (details['muscleGroup'] == muscleGroup) {
-          setsByExercise.putIfAbsent(exercise, () => {})[date] = (setsByExercise[exercise]?[date] ?? 0) + sets;
-        }
-      });
-    });
-  });
+  for (var workout in workoutInstances) {
+    for (var exercise in workout.exercises) {
+      String dateStr = DateFormat('yyyy-MM-dd').format(workout.createdAt);
+      setsByExercise
+        .putIfAbsent(exercise.name, () => {})
+        .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
+    }
+  }
   
   return setsByExercise;
 }
