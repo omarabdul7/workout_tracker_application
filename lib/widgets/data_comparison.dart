@@ -1,37 +1,42 @@
 import 'package:flutter/material.dart';
-import '../enums.dart';
 import 'package:intl/intl.dart';
+import '../enums.dart';
 import 'filter_dropdowns.dart';
-import 'muscle_group_card.dart';
-import '/models/workout_instance.dart';
+import 'data_card.dart';
 import 'dart:math';
+import '/models/workout_instance.dart';
 
-Widget buildMuscleGroupComparison(
+
+Widget buildDataComparison(
   BuildContext context,
   ViewType selectedViewType,
   TimeFrame selectedTimeFrame,
+  GroupBy selectedGroupBy,
   Map<String, Map<String, num>> volumeByMuscleGroup,
   Map<String, Map<String, num>> setsByMuscleGroup,
   Map<String, Map<String, double>> oneRepMaxByExercise,
   Function(ViewType?) onViewTypeChanged,
   Function(TimeFrame?) onTimeFrameChanged,
+  Function(GroupBy?) onGroupByChanged,
 ) {
   Map<String, Map<String, num>> data;
   String title;
 
   switch (selectedViewType) {
     case ViewType.volume:
-      data = volumeByMuscleGroup;
-      title = 'Volume by Muscle Group';
+      data = selectedGroupBy == GroupBy.muscleGroup ? volumeByMuscleGroup : convertVolumeToExercise(volumeByMuscleGroup);
+      title = 'Volume';
     case ViewType.sets:
-      data = setsByMuscleGroup;
-      title = 'Sets by Muscle Group';
+      data = selectedGroupBy == GroupBy.muscleGroup ? setsByMuscleGroup : convertSetsToExercise(setsByMuscleGroup);
+      title = 'Sets';
     case ViewType.oneRepMax:
-      data = convertOneRepMaxToMuscleGroup(oneRepMaxByExercise);
-      title = 'One Rep Max by Muscle Group';
+      data = selectedGroupBy == GroupBy.muscleGroup ? convertOneRepMaxToMuscleGroup(oneRepMaxByExercise) : oneRepMaxByExercise.map((k, v) => MapEntry(k, Map<String, num>.from(v)));
+      title = 'One Rep Max';
   }
 
-  final sortedMuscleGroups = data.entries.toList()
+  title += selectedGroupBy == GroupBy.muscleGroup ? ' by Muscle Group' : ' by Exercise';
+
+  final sortedGroups = data.entries.toList()
     ..sort((a, b) {
       final aggregatedDataA = aggregateData(a.value, selectedTimeFrame);
       final aggregatedDataB = aggregateData(b.value, selectedTimeFrame);
@@ -56,20 +61,22 @@ Widget buildMuscleGroupComparison(
             buildFilterDropdowns(
               selectedViewType,
               selectedTimeFrame,
+              selectedGroupBy,
               onViewTypeChanged,
               onTimeFrameChanged,
+              onGroupByChanged,
             ),
           ],
         ),
       ),
-      ...sortedMuscleGroups.map((entry) {
-        final muscleGroup = entry.key;
-        final muscleData = entry.value;
-        final aggregatedData = aggregateData(muscleData, selectedTimeFrame);
+      ...sortedGroups.map((entry) {
+        final group = entry.key;
+        final groupData = entry.value;
+        final aggregatedData = aggregateData(groupData, selectedTimeFrame);
         final sortedAggregatedData = sortAggregatedData(aggregatedData, selectedTimeFrame);
         final percentageChange = calculatePercentageChange(sortedAggregatedData);
 
-        return buildMuscleGroupCard(context, muscleGroup, percentageChange, sortedAggregatedData, selectedViewType);
+        return buildDataCard(context, group, percentageChange, sortedAggregatedData, selectedViewType);
       }).toList(),
     ],
   );
@@ -185,4 +192,36 @@ Map<String, Map<String, num>> convertOneRepMaxToMuscleGroup(Map<String, Map<Stri
   });
 
   return oneRepMaxByMuscleGroup;
+}
+
+Map<String, Map<String, num>> convertVolumeToExercise(Map<String, Map<String, num>> volumeByMuscleGroup) {
+  Map<String, Map<String, num>> volumeByExercise = {};
+  
+  volumeByMuscleGroup.forEach((muscleGroup, dateMap) {
+    dateMap.forEach((date, volume) {
+      ExerciseInstance.exerciseDetails.forEach((exercise, details) {
+        if (details['muscleGroup'] == muscleGroup) {
+          volumeByExercise.putIfAbsent(exercise, () => {})[date] = (volumeByExercise[exercise]?[date] ?? 0) + volume;
+        }
+      });
+    });
+  });
+  
+  return volumeByExercise;
+}
+
+Map<String, Map<String, num>> convertSetsToExercise(Map<String, Map<String, num>> setsByMuscleGroup) {
+  Map<String, Map<String, num>> setsByExercise = {};
+  
+  setsByMuscleGroup.forEach((muscleGroup, dateMap) {
+    dateMap.forEach((date, sets) {
+      ExerciseInstance.exerciseDetails.forEach((exercise, details) {
+        if (details['muscleGroup'] == muscleGroup) {
+          setsByExercise.putIfAbsent(exercise, () => {})[date] = (setsByExercise[exercise]?[date] ?? 0) + sets;
+        }
+      });
+    });
+  });
+  
+  return setsByExercise;
 }
