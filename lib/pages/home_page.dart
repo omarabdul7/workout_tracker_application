@@ -135,6 +135,8 @@ void _processWorkoutInstances(List<WorkoutInstance> instances) {
             _volumeByMuscleGroup,
             _setsByMuscleGroup,
             _oneRepMaxByExercise,
+            _workoutInstances.values.expand((i) => i).toList(),
+            
             (ViewType? newValue) {
               if (newValue != null) {
                 setState(() {
