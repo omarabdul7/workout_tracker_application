@@ -3,7 +3,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '/services/workout_instance_service.dart';
 import '/models/workout_instance.dart';
 import '../enums.dart';
-import '../widgets/muscle_group_comparison.dart';
+import '../widgets/data_comparison.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -19,10 +19,11 @@ class _HomePageState extends State<HomePage> {
   Map<DateTime, List<WorkoutInstance>> _workoutInstances = {};
   Map<String, Map<String, num>> _volumeByMuscleGroup = {};
   Map<String, Map<String, num>> _setsByMuscleGroup = {};
-  Map<String, Map<String, double>> _oneRepMaxByMuscleGroup= {};
+  Map<String, Map<String, double>> _oneRepMaxByExercise = {};
 
   TimeFrame _selectedTimeFrame = TimeFrame.month;
   ViewType _selectedViewType = ViewType.volume;
+  GroupBy _selectedGroupBy = GroupBy.muscleGroup;
 
   bool _isLoading = false;
   String? _error;
@@ -63,49 +64,44 @@ class _HomePageState extends State<HomePage> {
     _refreshController.refreshCompleted();
   }
 
-  void _processWorkoutInstances(List<WorkoutInstance> instances) {
-    _workoutInstances = {};
-    _volumeByMuscleGroup = {};
-    _setsByMuscleGroup = {};
-    _oneRepMaxByMuscleGroup = {};
+void _processWorkoutInstances(List<WorkoutInstance> instances) {
+  _workoutInstances = {};
+  _volumeByMuscleGroup = {};
+  _setsByMuscleGroup = {};
+  _oneRepMaxByExercise = {};
 
-    for (final instance in instances) {
-      final date = instance.createdAt;
-      final dateKey = DateTime(date.year, date.month, date.day);
-      _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
+  for (final instance in instances) {
+    final date = instance.createdAt;
+    final dateKey = DateTime(date.year, date.month, date.day);
+    _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
 
-      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      for (final exercise in instance.exercises) {
-        final muscleGroup = exercise.muscleGroup;
-        if (muscleGroup != 'unknown') {
-          _volumeByMuscleGroup
-            .putIfAbsent(muscleGroup, () => {})
-            .update(dateStr, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    for (final exercise in instance.exercises) {
+      final muscleGroup = exercise.muscleGroup;
+      if (muscleGroup != 'unknown') {
+        _volumeByMuscleGroup
+          .putIfAbsent(muscleGroup, () => {})
+          .update(dateStr, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
 
-          _setsByMuscleGroup
-            .putIfAbsent(muscleGroup, () => {})
-            .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
-        }
-
-        double maxOneRepMax = 0;
-        for (final set in exercise.sets) {
-          double oneRepMax = calculateOneRepMax(set.weight, set.reps);
-          if (oneRepMax > maxOneRepMax) {
-            maxOneRepMax = oneRepMax;
-          }
-        }
-
-        _oneRepMaxByMuscleGroup
-          .putIfAbsent(exercise.name, () => {})
-          .update(dateStr, (value) => value > maxOneRepMax ? value : maxOneRepMax, ifAbsent: () => maxOneRepMax);
+        _setsByMuscleGroup
+          .putIfAbsent(muscleGroup, () => {})
+          .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
       }
+
+      double maxOneRepMax = 0;
+      for (final set in exercise.sets) {
+        double oneRepMax = exercise.calculateOneRepMax(set.weight, set.reps);
+        if (oneRepMax > maxOneRepMax) {
+          maxOneRepMax = oneRepMax;
+        }
+      }
+
+      _oneRepMaxByExercise
+        .putIfAbsent(exercise.name, () => {})
+        .update(dateStr, (value) => value > maxOneRepMax ? value : maxOneRepMax, ifAbsent: () => maxOneRepMax);
     }
   }
-
-  double calculateOneRepMax(double weight, int reps) {
-    return weight / (1.0278 - 0.0278 * reps);
-  }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,13 +127,14 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          buildMuscleGroupComparison(
+          buildDataComparison(
             context,
             _selectedViewType,
             _selectedTimeFrame,
+            _selectedGroupBy,
             _volumeByMuscleGroup,
             _setsByMuscleGroup,
-            _oneRepMaxByMuscleGroup,
+            _oneRepMaxByExercise,
             (ViewType? newValue) {
               if (newValue != null) {
                 setState(() {
@@ -149,6 +146,13 @@ class _HomePageState extends State<HomePage> {
               if (newValue != null) {
                 setState(() {
                   _selectedTimeFrame = newValue;
+                });
+              }
+            },
+            (GroupBy? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedGroupBy = newValue;
                 });
               }
             },

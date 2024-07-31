@@ -49,6 +49,8 @@ class ExerciseInstance {
     'rear delt flies': {'muscleGroup': 'shoulders', 'isUnilateral': true},
     'bicep curl': {'muscleGroup': 'bicep', 'isUnilateral': true},
     'bicep curls': {'muscleGroup': 'bicep', 'isUnilateral': true},
+    'standing bicep curls': {'muscleGroup': 'bicep', 'isUnilateral': true},
+    'incline bicep curls': {'muscleGroup': 'bicep', 'isUnilateral': true},
     'curl': {'muscleGroup': 'bicep', 'isUnilateral': true},
     'curls': {'muscleGroup': 'bicep', 'isUnilateral': true},
     'hammer curl': {'muscleGroup': 'bicep', 'isUnilateral': true},
