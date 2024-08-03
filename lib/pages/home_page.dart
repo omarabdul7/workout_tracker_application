@@ -64,44 +64,45 @@ class _HomePageState extends State<HomePage> {
     _refreshController.refreshCompleted();
   }
 
-void _processWorkoutInstances(List<WorkoutInstance> instances) {
-  _workoutInstances = {};
-  _volumeByMuscleGroup = {};
-  _setsByMuscleGroup = {};
-  _oneRepMaxByExercise = {};
+  void _processWorkoutInstances(List<WorkoutInstance> instances) {
+    _workoutInstances = {};
+    _volumeByMuscleGroup = {};
+    _setsByMuscleGroup = {};
+    _oneRepMaxByExercise = {};
 
-  for (final instance in instances) {
-    final date = instance.createdAt;
-    final dateKey = DateTime(date.year, date.month, date.day);
-    _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
+    for (final instance in instances) {
+      final date = instance.createdAt;
+      final dateKey = DateTime(date.year, date.month, date.day);
+      _workoutInstances.putIfAbsent(dateKey, () => []).add(instance);
 
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    for (final exercise in instance.exercises) {
-      final muscleGroup = exercise.muscleGroup;
-      if (muscleGroup != 'unknown') {
-        _volumeByMuscleGroup
-          .putIfAbsent(muscleGroup, () => {})
-          .update(dateStr, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
+      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      for (final exercise in instance.exercises) {
+        final muscleGroup = exercise.muscleGroup;
+        if (muscleGroup != 'unknown') {
+          _volumeByMuscleGroup
+            .putIfAbsent(muscleGroup, () => {})
+            .update(dateStr, (value) => value + exercise.totalVolume, ifAbsent: () => exercise.totalVolume);
 
-        _setsByMuscleGroup
-          .putIfAbsent(muscleGroup, () => {})
-          .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
-      }
-
-      double maxOneRepMax = 0;
-      for (final set in exercise.sets) {
-        double oneRepMax = exercise.calculateOneRepMax(set.weight, set.reps);
-        if (oneRepMax > maxOneRepMax) {
-          maxOneRepMax = oneRepMax;
+          _setsByMuscleGroup
+            .putIfAbsent(muscleGroup, () => {})
+            .update(dateStr, (value) => value + exercise.sets.length, ifAbsent: () => exercise.sets.length);
         }
-      }
 
-      _oneRepMaxByExercise
-        .putIfAbsent(exercise.name, () => {})
-        .update(dateStr, (value) => value > maxOneRepMax ? value : maxOneRepMax, ifAbsent: () => maxOneRepMax);
+        double maxOneRepMax = 0;
+        for (final set in exercise.sets) {
+          double oneRepMax = exercise.calculateOneRepMax(set.weight, set.reps);
+          if (oneRepMax > maxOneRepMax) {
+            maxOneRepMax = oneRepMax;
+          }
+        }
+
+        _oneRepMaxByExercise
+          .putIfAbsent(exercise.name, () => {})
+          .update(dateStr, (value) => value > maxOneRepMax ? value : maxOneRepMax, ifAbsent: () => maxOneRepMax);
+      }
     }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
