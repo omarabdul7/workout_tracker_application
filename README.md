@@ -1,4 +1,4 @@
-# Workout_Tracker_Application
+# Workout Tracker Application
 
 ## Overview
 The Workout Tracker Application is a mobile app developed using Flutter. It allows users to create, track, and manage their workout routines. Users can create workout templates, record workout instances with detailed set information, and view their progress over time.
