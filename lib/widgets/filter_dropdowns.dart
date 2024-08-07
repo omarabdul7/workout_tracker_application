@@ -28,9 +28,9 @@ Widget buildFilterDropdowns(
             value: selectedTimeFrame,
             onChanged: onTimeFrameChanged,
             items: [
-              DropdownMenuItem(value: TimeFrame.week, child: Text('Week')),
-              DropdownMenuItem(value: TimeFrame.month, child: Text('Month')),
-              DropdownMenuItem(value: TimeFrame.year, child: Text('Year')),
+              DropdownMenuItem(value: TimeFrame.last7Days, child: Text('Last 7 Days')),
+              DropdownMenuItem(value: TimeFrame.lastMonth, child: Text('Last Month')),
+              DropdownMenuItem(value: TimeFrame.lastYear, child: Text('Last Year')),
             ],
           ),
         ],

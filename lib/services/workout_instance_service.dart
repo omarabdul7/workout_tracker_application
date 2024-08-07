@@ -64,4 +64,3 @@ Future<List<String>> getWorkoutTemplateNames() async {
     return workouts;
   }
 }
-

@@ -6,23 +6,51 @@ Widget buildChart(List<MapEntry<String, num>> data, String unit) {
     return const Center(child: Text('No data available for this time frame'));
   }
 
+  final maxY = data.map((e) => e.value.toDouble()).reduce((max, v) => max > v ? max : v) * 1.2;
+
   return BarChart(
     BarChartData(
       alignment: BarChartAlignment.spaceAround,
-      maxY: data.map((e) => e.value.toDouble()).reduce((max, v) => max > v ? max : v) * 1.2,
-      barTouchData: BarTouchData(enabled: false),
+      maxY: maxY,
+      barTouchData: BarTouchData(
+        enabled: true,
+        touchTooltipData: BarTouchTooltipData(
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            return BarTooltipItem(
+              '${data[group.x].key}\n',
+              const TextStyle(color: Colors.white),
+              children: <TextSpan>[
+                TextSpan(
+                  text: '${rod.toY.toStringAsFixed(1)} $unit',
+                  style: const TextStyle(
+                    color: Colors.yellow,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
       titlesData: FlTitlesData(
         show: true,
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (value, meta) {
+              if (value.toInt() % (data.length ~/ 7 + 1) != 0) {
+                return const SizedBox.shrink();
+              }
               if (value.toInt() >= 0 && value.toInt() < data.length) {
                 return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    data[value.toInt()].key,
-                    style: const TextStyle(fontSize: 10),
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Transform.rotate(
+                    angle: -0.5,
+                    child: Text(
+                      data[value.toInt()].key,
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   ),
                 );
               }
@@ -35,10 +63,12 @@ Widget buildChart(List<MapEntry<String, num>> data, String unit) {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 40,
-            getTitlesWidget: (value, meta) => Text(
-              '${value.toInt()} $unit',
-              style: const TextStyle(fontSize: 10),
-            ),
+            getTitlesWidget: (value, meta) {
+              return Text(
+                '${value.toInt()} $unit',
+                style: const TextStyle(fontSize: 10),
+              );
+            },
           ),
         ),
         rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
