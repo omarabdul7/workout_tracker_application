@@ -104,44 +104,46 @@ Map<String, num> aggregateData(Map<String, num> data, TimeFrame timeFrame) {
   final aggregatedData = <String, num>{};
 
   switch (timeFrame) {
-    case TimeFrame.week:
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      for (int i = 0; i < 7; i++) {
-        final day = startOfWeek.add(Duration(days: i));
-        final dayKey = DateFormat('E').format(day);
+    case TimeFrame.last7Days:
+      for (int i = 6; i >= 0; i--) {
+        final day = now.subtract(Duration(days: i));
+        final dayKey = DateFormat('MM-dd').format(day);
         aggregatedData[dayKey] = 0;
       }
       data.forEach((key, value) {
         final date = parseDate(key);
-        if (date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-            date.isBefore(startOfWeek.add(const Duration(days: 7)))) {
-          final dayKey = DateFormat('E').format(date);
+        if (date.isAfter(now.subtract(Duration(days: 7)))) {
+          final dayKey = DateFormat('MM-dd').format(date);
           aggregatedData[dayKey] = (aggregatedData[dayKey] ?? 0) + value;
         }
       });
 
-    case TimeFrame.month:
-      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-      for (int i = 0; i < (daysInMonth / 7).ceil(); i++) {
-        aggregatedData['Week ${i + 1}'] = 0;
+    case TimeFrame.lastMonth:
+      for (int i = 29; i >= 0; i--) {
+        final day = now.subtract(Duration(days: i));
+        final weekNumber = ((30 - i - 1) / 7).floor() + 1;
+        final weekKey = 'Week $weekNumber';
+        aggregatedData.putIfAbsent(weekKey, () => 0);
       }
       data.forEach((key, value) {
         final date = parseDate(key);
-        if (date.year == now.year && date.month == now.month) {
-          final weekNumber = ((date.day - 1) / 7).floor() + 1;
+        if (date.isAfter(now.subtract(Duration(days: 30)))) {
+          final weekNumber = ((30 - date.difference(now.subtract(Duration(days: 30))).inDays - 1) / 7).floor() + 1;
           final weekKey = 'Week $weekNumber';
           aggregatedData[weekKey] = (aggregatedData[weekKey] ?? 0) + value;
         }
       });
 
-    case TimeFrame.year:
-      for (int i = 1; i <= 12; i++) {
-        aggregatedData[DateFormat('MMM').format(DateTime(now.year, i))] = 0;
+    case TimeFrame.lastYear:
+      for (int i = 11; i >= 0; i--) {
+        final month = now.subtract(Duration(days: i * 30));
+        final monthKey = DateFormat('yyyy-MM').format(month);
+        aggregatedData[monthKey] = 0;
       }
       data.forEach((key, value) {
         final date = parseDate(key);
-        if (date.year == now.year) {
-          final monthKey = DateFormat('MMM').format(date);
+        if (date.isAfter(now.subtract(Duration(days: 365)))) {
+          final monthKey = DateFormat('yyyy-MM').format(date);
           aggregatedData[monthKey] = (aggregatedData[monthKey] ?? 0) + value;
         }
       });
@@ -154,18 +156,16 @@ List<MapEntry<String, num>> sortAggregatedData(Map<String, num> data, TimeFrame 
   final sortedEntries = data.entries.toList();
   
   switch (timeFrame) {
-    case TimeFrame.week:
-      final weekDayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      sortedEntries.sort((a, b) => weekDayOrder.indexOf(a.key).compareTo(weekDayOrder.indexOf(b.key)));
-    case TimeFrame.month:
+    case TimeFrame.last7Days:
+      sortedEntries.sort((a, b) => DateFormat('MM-dd').parse(a.key).compareTo(DateFormat('MM-dd').parse(b.key)));
+    case TimeFrame.lastMonth:
       sortedEntries.sort((a, b) {
         final weekA = int.parse(a.key.split(' ')[1]);
         final weekB = int.parse(b.key.split(' ')[1]);
         return weekA.compareTo(weekB);
       });
-    case TimeFrame.year:
-      final monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      sortedEntries.sort((a, b) => monthOrder.indexOf(a.key).compareTo(monthOrder.indexOf(b.key)));
+    case TimeFrame.lastYear:
+      sortedEntries.sort((a, b) => DateFormat('yyyy-MM').parse(a.key).compareTo(DateFormat('yyyy-MM').parse(b.key)));
   }
   return sortedEntries;
 }

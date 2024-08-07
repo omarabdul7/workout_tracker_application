@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   Map<String, Map<String, num>> _setsByMuscleGroup = {};
   Map<String, Map<String, double>> _oneRepMaxByExercise = {};
 
-  TimeFrame _selectedTimeFrame = TimeFrame.month;
+  TimeFrame _selectedTimeFrame = TimeFrame.last7Days;
   ViewType _selectedViewType = ViewType.volume;
   GroupBy _selectedGroupBy = GroupBy.muscleGroup;
 

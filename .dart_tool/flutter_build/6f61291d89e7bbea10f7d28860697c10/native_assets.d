@@ -1,0 +1,1 @@
+ /Users/omarabdul/workout_tracker_application/.dart_tool/flutter_build/6f61291d89e7bbea10f7d28860697c10/native_assets.yaml: 
