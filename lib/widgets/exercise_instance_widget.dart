@@ -14,6 +14,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
   final Function(int) onAddSet;
   final Function(int, int) onDeleteSet;
   final VoidCallback onSetChanged;
+  final ThemeData theme;
 
   const ExerciseInstanceWidget({
     Key? key,
@@ -27,29 +28,32 @@ class ExerciseInstanceWidget extends StatelessWidget {
     required this.onDeleteSet,
     required this.onSetChanged,
     required this.onResetTimer,
-    
+    required this.theme,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      color: const Color.fromARGB(255, 241, 246, 249),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildExerciseHeader(),
-            const SizedBox(height: 8),
-            
+            const SizedBox(height: 16),
             _buildPreviousWorkoutInfo(),
-            ...exercise.sets.map((set) => SetRowWidget(
-              set: set,
-              exerciseIndex: exerciseIndex,
-              templateExercise: templateExercise,
-              onDeleteSet: onDeleteSet,
-              onSetChanged: onSetChanged,
+            ...exercise.sets.map((set) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: SetRowWidget(
+                set: set,
+                exerciseIndex: exerciseIndex,
+                templateExercise: templateExercise,
+                onDeleteSet: onDeleteSet,
+                onSetChanged: onSetChanged,
+                theme: theme,
+              ),
             )).toList(),
             _buildAddSetButton(),
           ],
@@ -59,25 +63,31 @@ class ExerciseInstanceWidget extends StatelessWidget {
   }
 
   Widget _buildExerciseHeader() {
+    final arrowColor = theme.brightness == Brightness.light ? theme.colorScheme.onSurface : theme.colorScheme.primary;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           exercise.name,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_upward),
+              icon: Icon(Icons.arrow_upward, color: arrowColor),
               onPressed: exerciseIndex > 0 ? () => onMoveExercise(exerciseIndex, exerciseIndex - 1) : null,
             ),
             IconButton(
-              icon: const Icon(Icons.arrow_downward),
+              icon: Icon(Icons.arrow_downward, color: arrowColor),
               onPressed: () => onMoveExercise(exerciseIndex, exerciseIndex + 1),
             ),
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: Icon(Icons.delete, color: theme.colorScheme.error), 
               onPressed: () => onDeleteExercise(exerciseIndex),
             ),
           ],
@@ -91,33 +101,60 @@ class ExerciseInstanceWidget extends StatelessWidget {
       (e) => e.name == exercise.name,
       orElse: () => ExerciseInstance(name: exercise.name, sets: []),
     );
-
     if (lastExerciseInstance == null || lastExerciseInstance.sets.isEmpty) {
       return const SizedBox.shrink();
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Previous Workout', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+        Text(
+          'Previous Workout',
+          style: TextStyle(
+            color: theme.brightness == Brightness.dark
+                ? theme.colorScheme.secondary
+                : const Color(0xFF34A4FC), 
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
         const SizedBox(height: 8),
         ...lastExerciseInstance.sets.map((set) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
             'Set ${set.setNumber}: ${set.weight} lb x ${set.reps} reps',
-            style: const TextStyle(color: Colors.black),
+            style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
           ),
         )),
-        const Divider(thickness: 1),
-        const SizedBox(height: 8),
+        Divider(thickness: 1, color: theme.colorScheme.onSurface.withOpacity(0.1)),
+        const SizedBox(height: 16),
       ],
     );
   }
 
   Widget _buildAddSetButton() {
-    return TextButton(
+    return TextButton.icon(
       onPressed: () => onAddSet(exerciseIndex),
-      child: const Text('Add Set'),
+      icon: Icon(
+        Icons.add,
+        color: theme.brightness == Brightness.light
+            ? const Color(0xFF2C4C60) 
+            : theme.colorScheme.primary, 
+      ),
+      label: Text(
+        'Add Set',
+        style: TextStyle(
+          color: theme.brightness == Brightness.light
+              ? const Color(0xFF2C4C60) 
+              : theme.colorScheme.onPrimary, 
+          fontWeight: FontWeight.bold,
+          fontSize: 14, 
+        ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), 
+        backgroundColor: Colors.transparent, 
+        side: BorderSide.none,
+      ),
     );
   }
 }

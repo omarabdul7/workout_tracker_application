@@ -64,7 +64,9 @@ Widget buildDataComparison(
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
             ),
             const SizedBox(height: 8),
             buildFilterDropdowns(
@@ -74,6 +76,7 @@ Widget buildDataComparison(
               onViewTypeChanged,
               onTimeFrameChanged,
               onGroupByChanged,
+              context
             ),
           ],
         ),

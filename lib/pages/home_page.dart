@@ -105,9 +105,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        title: Text('Home Page', style: TextStyle(color: theme.colorScheme.onPrimary)),
+        backgroundColor: theme.colorScheme.primary,
       ),
       body: SmartRefresher(
         controller: _refreshController,
@@ -117,51 +119,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null) {
-      return Center(child: Text(_error!, style: Theme.of(context).textTheme.bodyLarge));
-    }
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          buildDataComparison(
-            context,
-            _selectedViewType,
-            _selectedTimeFrame,
-            _selectedGroupBy,
-            _volumeByMuscleGroup,
-            _setsByMuscleGroup,
-            _oneRepMaxByExercise,
-            _workoutInstances.values.expand((i) => i).toList(),
-            
-            (ViewType? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedViewType = newValue;
-                });
-              }
-            },
-            (TimeFrame? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedTimeFrame = newValue;
-                });
-              }
-            },
-            (GroupBy? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedGroupBy = newValue;
-                });
-              }
-            },
-          ),
-        ],
+Widget _buildBody() {
+  final theme = Theme.of(context);
+
+  if (_isLoading) {
+    return Center(child: CircularProgressIndicator());
+  }
+  if (_error != null) {
+    return Center(
+      child: Text(
+        _error!,
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
+          fontSize: 16,
+        ),
       ),
     );
   }
+  return SingleChildScrollView(
+    child: Column(
+      children: [
+        const SizedBox(height: 20),
+        buildDataComparison(
+          context,
+          _selectedViewType,
+          _selectedTimeFrame,
+          _selectedGroupBy,
+          _volumeByMuscleGroup,
+          _setsByMuscleGroup,
+          _oneRepMaxByExercise,
+          _workoutInstances.values.expand((i) => i).toList(),
+          (ViewType? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedViewType = newValue;
+              });
+            }
+          },
+          (TimeFrame? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedTimeFrame = newValue;
+              });
+            }
+          },
+          (GroupBy? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedGroupBy = newValue;
+              });
+            }
+          },
+        ),
+      ],
+    ),
+  );
+}
 }

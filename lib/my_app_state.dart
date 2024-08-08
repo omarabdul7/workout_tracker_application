@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'models/workout.dart';
+import 'package:provider/provider.dart';
 
+// MyAppState
 class MyAppState extends ChangeNotifier {
-  final List<Workout> _workouts = <Workout>[];
-  List<Workout> get workouts => _workouts;
+  bool isDarkMode = false;
 
-  void addWorkout(Workout workout) {
-    _workouts.add(workout);
+  void toggleTheme() {
+    isDarkMode = !isDarkMode;
     notifyListeners();
   }
 }
+

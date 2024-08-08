@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../enums.dart';
+import 'package:workout_tracker_application/my_app.dart';
+import '/pages/settings_page.dart';
 
 Widget buildFilterDropdowns(
   ViewType selectedViewType,
@@ -8,6 +10,7 @@ Widget buildFilterDropdowns(
   Function(ViewType?) onViewTypeChanged,
   Function(TimeFrame?) onTimeFrameChanged,
   Function(GroupBy?) onGroupByChanged,
+  BuildContext context,
 ) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -19,18 +22,66 @@ Widget buildFilterDropdowns(
             value: selectedViewType,
             onChanged: onViewTypeChanged,
             items: [
-              DropdownMenuItem(value: ViewType.volume, child: Text('Volume')),
-              DropdownMenuItem(value: ViewType.sets, child: Text('Sets')),
-              DropdownMenuItem(value: ViewType.oneRepMax, child: Text('One Rep Max')),
+              DropdownMenuItem(
+                value: ViewType.volume,
+                child: Text(
+                  'Volume',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: ViewType.sets,
+                child: Text(
+                  'Sets',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: ViewType.oneRepMax,
+                child: Text(
+                  'One Rep Max',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
             ],
           ),
           DropdownButton<TimeFrame>(
             value: selectedTimeFrame,
             onChanged: onTimeFrameChanged,
             items: [
-              DropdownMenuItem(value: TimeFrame.last7Days, child: Text('Last 7 Days')),
-              DropdownMenuItem(value: TimeFrame.lastMonth, child: Text('Last Month')),
-              DropdownMenuItem(value: TimeFrame.lastYear, child: Text('Last Year')),
+              DropdownMenuItem(
+                value: TimeFrame.last7Days,
+                child: Text(
+                  'Last 7 Days',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: TimeFrame.lastMonth,
+                child: Text(
+                  'Last Month',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: TimeFrame.lastYear,
+                child: Text(
+                  'Last Year',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                ),
+              ),
             ],
           ),
         ],
@@ -40,8 +91,24 @@ Widget buildFilterDropdowns(
         value: selectedGroupBy,
         onChanged: onGroupByChanged,
         items: [
-          DropdownMenuItem(value: GroupBy.muscleGroup, child: Text('By Muscle Group')),
-          DropdownMenuItem(value: GroupBy.exercise, child: Text('By Exercise')),
+          DropdownMenuItem(
+            value: GroupBy.muscleGroup,
+            child: Text(
+              'By Muscle Group',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+            ),
+          ),
+          DropdownMenuItem(
+            value: GroupBy.exercise,
+            child: Text(
+              'By Exercise',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+            ),
+          ),
         ],
       ),
     ],

@@ -13,42 +13,91 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Workout Tracker',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Color.fromRGBO (202,222,239, 1)),
-          textTheme: const TextTheme(
-            displayMedium: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-            bodyMedium: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          scaffoldBackgroundColor: Colors.white,
-          cardTheme: CardTheme(
-            color: const Color(0xFF2C4C60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            elevation: 4,
-          ),
-          bottomNavigationBarTheme: BottomNavigationBarThemeData(
-            backgroundColor: const Color(0xFF2C4C60),
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.grey.shade400,
-            selectedLabelStyle: const TextStyle(fontSize: 12),
-            unselectedLabelStyle: const TextStyle(fontSize: 12),
-          ),
-        ),
-        home: const MyHomePage(),
+      child: Consumer<MyAppState>(
+        builder: (context, appState, child) {
+          return MaterialApp(
+            title: 'Workout Tracker',
+            theme: _buildTheme(appState.isDarkMode),
+            home: const MyHomePage(),
+          );
+        },
       ),
     );
   }
+
+ThemeData _buildTheme(bool isDarkMode) {
+  final baseTheme = isDarkMode ? ThemeData.dark() : ThemeData.light();
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: const Color.fromARGB(255, 241, 246, 249),
+    brightness: isDarkMode ? Brightness.dark : Brightness.light,
+  );
+
+  return baseTheme.copyWith(
+    useMaterial3: true,
+    colorScheme: colorScheme.copyWith(
+      primary: isDarkMode ? Colors.grey[900]: const Color.fromARGB(255, 241, 246, 249),
+      onPrimary: isDarkMode ? Colors.white : Colors.black,
+      background: isDarkMode ? Colors.black : Colors.white,
+      surface: isDarkMode ? Colors.grey[900] : const Color(0xFF2C4C60),
+      onSurface: isDarkMode ? Colors.white : Colors.black,
+    ),
+    scaffoldBackgroundColor: isDarkMode ? Colors.black : Colors.white,
+    textTheme: TextTheme(
+      displayLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        color: isDarkMode ? Colors.white : Colors.black,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        color: isDarkMode ? Colors.white70 : Colors.black87,
+      ),
+    ),
+    cardTheme: CardTheme(
+      color: isDarkMode 
+          ? Colors.grey[800] 
+          : const Color.fromARGB(255, 241, 246, 249),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      elevation: 4,
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFF2C4C60),
+      selectedItemColor: Colors.white,
+      unselectedItemColor: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+      selectedLabelStyle: const TextStyle(fontSize: 12),
+      unselectedLabelStyle: const TextStyle(fontSize: 12),
+    ),
+    appBarTheme: AppBarTheme(
+      color: isDarkMode ? Colors.black : Colors.white,
+      foregroundColor: isDarkMode ? Colors.white : Colors.black,
+    ),
+  );
+}
 }
 
 class MyHomePage extends StatefulWidget {
@@ -70,10 +119,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Container(
-        color: const Color(0xFF2C4C60),
+        color: theme.bottomNavigationBarTheme.backgroundColor,
         child: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -94,8 +145,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
-          unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
+          selectedItemColor: theme.bottomNavigationBarTheme.selectedItemColor,
+          unselectedItemColor: theme.bottomNavigationBarTheme.unselectedItemColor,
           backgroundColor: Colors.transparent,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
