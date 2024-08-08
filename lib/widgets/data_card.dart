@@ -10,13 +10,20 @@ Widget buildDataCard(
   List<MapEntry<String, num>> sortedAggregatedData,
   ViewType selectedViewType,
 ) {
+  final theme = Theme.of(context);
+  final isDarkMode = theme.brightness == Brightness.dark;
+  final textColor = isDarkMode ? Colors.white : Colors.black;
+
+  final lightCardColor = const Color.fromARGB(255, 241, 246, 249);
+  final darkCardColor = Colors.grey[800]; 
+
   return Card(
-    color: const Color.fromARGB(255, 241, 246, 249),
+    color: isDarkMode ? darkCardColor : lightCardColor,
     margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
     child: ExpansionTile(
       title: Text(
         groupName,
-        style: Theme.of(context).textTheme.titleMedium,
+        style: theme.textTheme.titleMedium?.copyWith(color: textColor),
       ),
       subtitle: Text(
         formatPercentageChange(percentageChange),

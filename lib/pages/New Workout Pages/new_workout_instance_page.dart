@@ -194,7 +194,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     _timerKey.currentState?.resetTimer();
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -202,7 +202,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         actions: [
           TextButton(
             onPressed: _saveWorkoutInstance,
-            child: const Text('Finish', style: TextStyle(color: Colors.green)),
+            child: const Text('Finish', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -222,55 +222,70 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   }
 
   Widget _buildWorkoutForm() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    ..._exerciseInstances.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final exercise = entry.value;
-                      return ExerciseInstanceWidget(
-                        exercise: exercise,
-                        exerciseIndex: index,
-                        templateExercise: widget.workout.exercises.firstWhere(
-                          (e) => e.name == exercise.name,
-                          orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
-                        ),
-                        lastWorkoutInstance: _lastWorkoutInstance,
-                        onMoveExercise: _moveExercise,
-                        onDeleteExercise: _deleteExercise,
-                        onAddSet: _addSet,
-                        onDeleteSet: _deleteSet,
-                        onSetChanged: () => _updateLastExercise(index),
-                        onResetTimer: _resetTimer,
-                      );
-                    }).toList(),
-                    _buildAddExerciseButton(),
-                  ],
+    final theme = Theme.of(context);
+
+    return Container(
+      color: theme.scaffoldBackgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      ..._exerciseInstances.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final exercise = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: ExerciseInstanceWidget(
+                            exercise: exercise,
+                            exerciseIndex: index,
+                            templateExercise: widget.workout.exercises.firstWhere(
+                              (e) => e.name == exercise.name,
+                              orElse: () => Exercise(name: 'Unknown', sets: 0, restPeriod: 0),
+                            ),
+                            lastWorkoutInstance: _lastWorkoutInstance,
+                            onMoveExercise: _moveExercise,
+                            onDeleteExercise: _deleteExercise,
+                            onAddSet: _addSet,
+                            onDeleteSet: _deleteSet,
+                            onSetChanged: () => _updateLastExercise(index),
+                            onResetTimer: _resetTimer,
+                            theme: theme,
+                          ),
+                        );
+                      }).toList(),
+                      _buildAddExerciseButton(theme),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          TimerWidget(
-            key: _timerKey,
-            currentExerciseRestPeriod: _currentExerciseRestPeriod,
-          ),
-        ],
+            TimerWidget(
+              key: _timerKey,
+              currentExerciseRestPeriod: _currentExerciseRestPeriod,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAddExerciseButton() {
-    return TextButton(
+  Widget _buildAddExerciseButton(ThemeData theme) {
+    return ElevatedButton.icon(
       onPressed: _addExercise,
-      child: const Text('Add Exercise'),
+      icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+      label: Text('Add Exercise', style: TextStyle(color: theme.colorScheme.onPrimary)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.primary,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 }
