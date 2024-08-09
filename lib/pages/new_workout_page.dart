@@ -8,7 +8,6 @@ class NewWorkoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: WorkoutTemplateList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

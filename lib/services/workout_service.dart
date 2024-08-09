@@ -5,7 +5,7 @@ class WorkoutService {
   final CollectionReference workoutsCollection = FirebaseFirestore.instance.collection('workout_templates');
 
   Future<void> addWorkout(Workout workout) {
-    return workoutsCollection.add(workout.toJson());
+    return workoutsCollection.doc(workout.name).set(workout.toJson());
   }
 
   Stream<List<Workout>> getWorkouts() {
@@ -18,5 +18,13 @@ class WorkoutService {
         return Workout.fromJson(data);
       }).toList();
     });
+  }
+
+  Future<void> deleteWorkout(String workoutName) async {
+    QuerySnapshot querySnapshot = await workoutsCollection.where('name', isEqualTo: workoutName).get();
+
+    for (DocumentSnapshot doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
   }
 }

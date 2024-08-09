@@ -1,11 +1,15 @@
 import '/models/exercise.dart';
 
 class Workout {
-  final String name;
+  final String name; 
   final List<Exercise> exercises;
   final DateTime createdAt;
 
-  Workout({required this.name, required this.exercises, required this.createdAt});
+  Workout({
+    required this.name,
+    required this.exercises,
+    required this.createdAt
+  });
 
   Map<String, dynamic> toJson() {
     return {
@@ -25,4 +29,3 @@ class Workout {
     );
   }
 }
-
