@@ -8,7 +8,7 @@ class WorkoutTemplateList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Your Workouts'),
+        title: const Text('Your Workouts'),
       ),
       body: StreamBuilder<List<Workout>>(
         stream: WorkoutService().getWorkouts(),
@@ -18,7 +18,7 @@ class WorkoutTemplateList extends StatelessWidget {
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           return ListView(
@@ -33,10 +33,48 @@ class WorkoutTemplateList extends StatelessWidget {
                   ),
                 );
               },
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Color.fromARGB(255, 114, 105, 104)),
+                onPressed: () async {
+                  final shouldDelete = await _confirmDelete(context);
+                  if (shouldDelete) {
+                    await WorkoutService().deleteWorkout(workout.name);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Workout deleted')),
+                    );
+                  }
+                },
+              ),
             )).toList(),
           );
         },
       ),
     );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: const Text('Are you sure you want to delete this workout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
   }
 }

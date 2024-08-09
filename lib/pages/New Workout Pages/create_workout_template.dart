@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '/models/workout.dart';
-import '/services/workout_service.dart';
 import '/models/exercise.dart';
+import '/services/workout_service.dart';
+
 
 class CreateWorkoutTemplate extends StatefulWidget {
   const CreateWorkoutTemplate({Key? key}) : super(key: key);

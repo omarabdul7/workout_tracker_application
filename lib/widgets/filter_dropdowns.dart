@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../enums.dart';
-import 'package:workout_tracker_application/my_app.dart';
-import '/pages/settings_page.dart';
+
 
 Widget buildFilterDropdowns(
   ViewType selectedViewType,
