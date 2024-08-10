@@ -52,29 +52,44 @@ class WorkoutTemplateList extends StatelessWidget {
     );
   }
 
-  Future<bool> _confirmDelete(BuildContext context) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to delete this workout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('Cancel'),
+Future<bool> _confirmDelete(BuildContext context) async {
+  final theme = Theme.of(context);
+
+  return await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(
+          'Confirm Delete',
+          style: theme.textTheme.headlineMedium,
+        ),
+        content: Text(
+          'Are you sure you want to delete this workout?',
+          style: theme.textTheme.bodyLarge,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.colorScheme.onPrimary),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Delete'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(color: theme.colorScheme.error),
             ),
-          ],
-        );
-      },
-    ) ?? false;
-  }
+          ),
+        ],
+        backgroundColor: theme.cardTheme.color,
+      );
+    },
+  ) ?? false;
+}
 }
