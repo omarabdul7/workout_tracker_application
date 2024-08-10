@@ -35,19 +35,17 @@ class WorkoutInstanceService {
     }
   }
 
+  Future<List<String>> getWorkoutTemplateNames() async {
+    List<String> workoutTemplateNames = [];
 
-Future<List<String>> getWorkoutTemplateNames() async {
-  List<String> workoutTemplateNames = [];
+    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('workout_templates').get();
+    for (var doc in snapshot.docs) {
+      String name = doc['name'].toString().toLowerCase().replaceAll(' ', '_');
+      workoutTemplateNames.add(name);
+    }
 
-  QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('workout_templates').get();
-  for (var doc in snapshot.docs) {
-    String name = doc['name'].toString().toLowerCase().replaceAll(' ', '_');
-    workoutTemplateNames.add(name);
+    return workoutTemplateNames;
   }
-
-  return workoutTemplateNames;
-}
-
 
   Future<List<WorkoutInstance>> getHistoricWorkouts() async {
     List<WorkoutInstance> workouts = [];
@@ -62,5 +60,22 @@ Future<List<String>> getWorkoutTemplateNames() async {
     workouts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return workouts;
+  }
+
+  Future<void> deleteWorkoutInstance(String workoutName, DateTime createdAt) async {
+    final collectionName = workoutName.replaceAll(' ', '_').toLowerCase();
+    final workoutInstancesCollection = _firestore.collection(collectionName);
+
+    try {
+      final querySnapshot = await workoutInstancesCollection
+          .where('createdAt', isEqualTo: createdAt.toIso8601String())
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print('Error deleting workout instance: $e');
+    }
   }
 }

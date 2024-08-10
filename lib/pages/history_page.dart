@@ -22,6 +22,10 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   void initState() {
     super.initState();
+    _loadWorkouts();
+  }
+
+  void _loadWorkouts() {
     _historicWorkoutsFuture = WorkoutInstanceService().getHistoricWorkouts();
     _historicWorkoutsFuture?.then((workouts) {
       setState(() {
@@ -63,60 +67,89 @@ class _HistoryPageState extends State<HistoryPage> {
     return groupedWorkouts;
   }
 
- Widget _buildCalendar() {
-    return TableCalendar(
-      firstDay: DateTime.utc(2020, 1, 1),
-      lastDay: DateTime.utc(2030, 12, 31),
-      focusedDay: _focusedDay,
-      calendarFormat: _calendarFormat,
-      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-      onDaySelected: (selectedDay, focusedDay) {
-        setState(() {
-          _selectedDay = selectedDay;
-          _focusedDay = focusedDay;
-        });
-      },
-      onFormatChanged: (format) {
-        if (_calendarFormat != format) {
-          setState(() {
-            _calendarFormat = format;
-          });
-        }
-      },
-      onPageChanged: (focusedDay) {
-        _focusedDay = focusedDay;
-      },
-      eventLoader: (day) {
-        final eventDay = DateTime(day.year, day.month, day.day);
-        return _workoutInstances[eventDay] ?? [];
-      },
-    );
-  }
 
+Widget _buildCalendar(BuildContext context) {
+  final theme = Theme.of(context);
+
+  return TableCalendar(
+    firstDay: DateTime.utc(2020, 1, 1),
+    lastDay: DateTime.utc(2030, 12, 31),
+    focusedDay: _focusedDay,
+    calendarFormat: _calendarFormat,
+    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+    onDaySelected: (selectedDay, focusedDay) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+      });
+    },
+    onFormatChanged: (format) {
+      if (_calendarFormat != format) {
+        setState(() {
+          _calendarFormat = format;
+        });
+      }
+    },
+    onPageChanged: (focusedDay) {
+      _focusedDay = focusedDay;
+    },
+    eventLoader: (day) {
+      final eventDay = DateTime(day.year, day.month, day.day);
+      return _workoutInstances[eventDay] ?? [];
+    },
+    calendarStyle: CalendarStyle(
+      todayDecoration: BoxDecoration(
+        color: theme.colorScheme.primary.withOpacity(0.4),
+        shape: BoxShape.circle,
+      ),
+      selectedDecoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        shape: BoxShape.circle,
+      ),
+      weekendTextStyle: TextStyle(color: theme.colorScheme.secondary),
+      defaultTextStyle: TextStyle(color: theme.textTheme.bodyLarge!.color),
+      outsideTextStyle: TextStyle(color: theme.textTheme.bodyMedium!.color!.withOpacity(0.6)),
+      disabledTextStyle: TextStyle(color: theme.disabledColor),
+    ),
+    headerStyle: HeaderStyle(
+      titleTextStyle: theme.textTheme.headlineMedium!,
+      formatButtonTextStyle: TextStyle(color: theme.colorScheme.onSurface),
+      formatButtonDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      leftChevronIcon: Icon(Icons.chevron_left, color: theme.iconTheme.color),
+      rightChevronIcon: Icon(Icons.chevron_right, color: theme.iconTheme.color),
+    ),
+    daysOfWeekStyle: DaysOfWeekStyle(
+      weekdayStyle: TextStyle(color: theme.textTheme.bodySmall!.color),
+      weekendStyle: TextStyle(color: theme.colorScheme.secondary),
+    ),
+  );
+}
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('History'),
+        title: const Text('History'),
       ),
       body: FutureBuilder<List<WorkoutInstance>>(
         future: _historicWorkoutsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No workouts found.'));
+            return const Center(child: Text('No workouts found.'));
           } else {
             List<WorkoutInstance> workouts = snapshot.data!;
             Map<String, List<WorkoutInstance>> groupedWorkouts = groupWorkoutsByYearMonth(workouts);
 
             return Column(
               children: [
-                _buildCalendar(),
+                _buildCalendar(context),
                 Expanded(
                   child: ListView.builder(
                     itemCount: groupedWorkouts.keys.length,
@@ -130,13 +163,14 @@ class _HistoryPageState extends State<HistoryPage> {
                           return ListTile(
                             title: Text(workout.name),
                             subtitle: Text(formatDateTime(workout.createdAt)),
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => HistoricWorkout(workoutInstance: workout),
                                 ),
                               );
+                              _loadWorkouts(); 
                             },
                           );
                         }).toList(),
