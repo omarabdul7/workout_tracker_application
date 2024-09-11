@@ -1,0 +1,33 @@
+# Flutter build
+/build/
+
+# Dart/Pub
+/.dart_tool/
+/.pub/
+
+# iOS specific
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Pods/
+
+# Android specific
+/.gradle/
+/local.properties
+/.idea/
+/*.iml
+
+# IDEs
+/.idea/
+/.vscode/
+
+# System Files
+.DS_Store
+
+# Logs
+*.log
+
+# Editor Swap Files
+*.swp
+
+
+
