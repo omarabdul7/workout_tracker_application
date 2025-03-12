@@ -1,6 +1,6 @@
 {
-    "name": "workout_tracker_application",
-    "short_name": "workout_tracker_application",
+    "name": "new_workout_tracker",
+    "short_name": "new_workout_tracker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

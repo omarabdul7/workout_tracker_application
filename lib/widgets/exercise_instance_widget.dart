@@ -17,7 +17,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
   final ThemeData theme;
 
   const ExerciseInstanceWidget({
-    Key? key,
+    super.key,
     required this.exercise,
     required this.exerciseIndex,
     required this.templateExercise,
@@ -29,7 +29,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
     required this.onSetChanged,
     required this.onResetTimer,
     required this.theme,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
                 onSetChanged: onSetChanged,
                 theme: theme,
               ),
-            )).toList(),
+            )),
             _buildAddSetButton(),
           ],
         ),

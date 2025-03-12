@@ -17,7 +17,7 @@ List<Widget> buildDataList(List<MapEntry<String, num>> data, String unit) {
               Text(entry.key),
               Text('${entry.value.toStringAsFixed(1)} $unit'),
             ],
-          )).toList(),
+          )),
         ],
       ),
     ),

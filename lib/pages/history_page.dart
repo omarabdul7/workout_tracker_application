@@ -6,7 +6,7 @@ import 'History Pages/historic_workouts.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HistoryPage extends StatefulWidget {
-  const HistoryPage({Key? key}) : super(key: key);
+  const HistoryPage({super.key});
 
   @override
   _HistoryPageState createState() => _HistoryPageState();

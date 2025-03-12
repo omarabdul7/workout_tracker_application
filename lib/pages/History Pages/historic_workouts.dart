@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '/models/workout_instance.dart';
 import '/services/workout_instance_service.dart';
 
 class HistoricWorkout extends StatelessWidget {
   final WorkoutInstance workoutInstance;
 
-  const HistoricWorkout({Key? key, required this.workoutInstance}) : super(key: key);
+  const HistoricWorkout({super.key, required this.workoutInstance});
 
   String formatDateTime(DateTime dateTime) {
     final DateFormat formatter = DateFormat('yyyy-MM-dd h:mma');
@@ -123,11 +122,11 @@ void _showDeleteConfirmationDialog(BuildContext context) {
                           'Set ${set.setNumber}: ${set.weight} lbs x ${set.reps} reps',
                           style: TextStyle(fontSize: 16),
                         );
-                      }).toList(),
+                      }),
                       SizedBox(height: 16),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

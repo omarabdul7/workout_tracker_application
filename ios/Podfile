@@ -29,7 +29,6 @@ flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
-  use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
@@ -38,7 +37,61 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  # Handle individual source files that might have -G flags
+  installer.pods_project.targets.each do |target|
+    if target.respond_to?(:source_build_phase) && target.source_build_phase.respond_to?(:files)
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          file.settings['COMPILER_FLAGS'] = file.settings['COMPILER_FLAGS'].gsub(/-G[^ ]*/, '')
+        end
+      end
+    end
+  end
+
+  # Fix for BoringSSL-GRPC
+  boring_ssl_target = installer.pods_project.targets.find { |target| target.name == 'BoringSSL-GRPC' }
+  if boring_ssl_target
+    boring_ssl_target.build_configurations.each do |config|
+      # Completely remove the problematic flags for BoringSSL-GRPC
+      config.build_settings['OTHER_CFLAGS'] = ''
+      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ''
+      
+      # Remove all GCC_PREPROCESSOR_DEFINITIONS with -G
+      if config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+        definitions = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+        if definitions.is_a?(Array)
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = definitions.reject { |flag| flag.include?('-G') }
+          # Add OPENSSL_NO_ASM=1 instead of -DOPENSSL_NO_ASM
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'OPENSSL_NO_ASM=1'
+        end
+      end
+    end
+  end
+
+  # Fix for all other targets that might be affected
+  ['abseil', 'gRPC-Core', 'gRPC-C++'].each do |lib_name|
+    target = installer.pods_project.targets.find { |target| target.name == lib_name }
+    if target
+      target.build_configurations.each do |config|
+        # Remove problematic flags
+        config.build_settings['OTHER_CFLAGS'] = ''
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ''
+      end
+    end
+  end
+  
+  # Apply general settings to all targets
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      
+      # Disable bitcode as it's deprecated
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # Set build active architecture only to YES for debug
+      config.build_settings['ONLY_ACTIVE_ARCH'] = config.name == 'Debug' ? 'YES' : 'NO'
+    end
   end
 end

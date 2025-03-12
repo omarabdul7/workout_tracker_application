@@ -5,12 +5,12 @@ import '/services/workout_instance_service.dart';
 import '/models/exercise.dart';
 import '/widgets/exercise_instance_widget.dart';
 import '/widgets/timer_widget.dart';
-import 'package:workout_tracker_application/services/timer_service.dart';
+import 'package:new_workout_tracker/services/timer_service.dart';
 
 class NewWorkoutInstancePage extends StatefulWidget {
   final Workout workout;
 
-  const NewWorkoutInstancePage({Key? key, required this.workout}) : super(key: key);
+  const NewWorkoutInstancePage({super.key, required this.workout});
 
   @override
   NewWorkoutInstancePageState createState() => NewWorkoutInstancePageState();
@@ -23,7 +23,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   late Future<void> _loadDataFuture;
   int _currentExerciseRestPeriod = 0;
   final GlobalKey<TimerWidgetState> _timerKey = GlobalKey<TimerWidgetState>();
-  int _lastUpdatedExerciseIndex = 0;
 
   @override
   void initState() {
@@ -40,8 +39,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     TimerService().dispose();
     super.dispose();
   }
-
-
 
   Future<void> _loadLastWorkoutInstance() async {
     _lastWorkoutInstance = await WorkoutInstanceService().getLastWorkoutInstance(widget.workout.name);
@@ -116,7 +113,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       final newSet = SetDetails(setNumber: exercise.sets.length + 1, weight: 0.0, reps: 0);
       exercise.sets.add(newSet);
     });
-    _updateLastExercise(exerciseIndex);
   }
 
   void _deleteSet(int exerciseIndex, int setIndex) {
@@ -124,7 +120,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
       _exerciseInstances[exerciseIndex].sets.removeAt(setIndex);
       _renumberSets(_exerciseInstances[exerciseIndex]);
     });
-    _updateLastExercise(exerciseIndex);
   }
 
   void _renumberSets(ExerciseInstance exercise) {
@@ -175,7 +170,6 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         ]);
         _exerciseInstances.add(newExercise);
       });
-      _updateLastExercise(_exerciseInstances.length - 1);
     }
   }
 
@@ -188,13 +182,12 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
 
   void _updateLastExercise(int exerciseIndex) {
     setState(() {
-      _lastUpdatedExerciseIndex = exerciseIndex;
       _currentExerciseRestPeriod = widget.workout.exercises[exerciseIndex].restPeriod;
     });
     _timerKey.currentState?.resetTimer();
   }
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -259,7 +252,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
                             theme: theme,
                           ),
                         );
-                      }).toList(),
+                      }),
                       _buildAddExerciseButton(theme),
                     ],
                   ),

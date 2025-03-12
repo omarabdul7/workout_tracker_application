@@ -3,7 +3,7 @@ import 'New Workout Pages/create_workout_template.dart';
 import 'New Workout Pages/workout_template_list.dart';
 
 class NewWorkoutPage extends StatelessWidget {
-  const NewWorkoutPage({Key? key}) : super(key: key);
+  const NewWorkoutPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -5,9 +5,9 @@ class TimerWidget extends StatefulWidget {
   final int currentExerciseRestPeriod;
 
   const TimerWidget({
-    Key? key,
+    super.key,
     required this.currentExerciseRestPeriod,
-  }) : super(key: key);
+  });
 
   @override
   TimerWidgetState createState() => TimerWidgetState();

@@ -89,7 +89,7 @@ Widget buildDataComparison(
         final percentageChange = calculatePercentageChange(sortedAggregatedData);
 
         return buildDataCard(context, group, percentageChange, sortedAggregatedData, selectedViewType);
-      }).toList(),
+      }),
     ],
   );
 }

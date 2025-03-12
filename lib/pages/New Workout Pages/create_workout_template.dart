@@ -5,7 +5,7 @@ import '/services/workout_service.dart';
 
 
 class CreateWorkoutTemplate extends StatefulWidget {
-  const CreateWorkoutTemplate({Key? key}) : super(key: key);
+  const CreateWorkoutTemplate({super.key});
 
   @override
   CreateWorkoutTemplateState createState() => CreateWorkoutTemplateState();

@@ -11,14 +11,14 @@ class SetRowWidget extends StatelessWidget {
   final ThemeData theme;
 
   const SetRowWidget({
-    Key? key,
+    super.key,
     required this.set,
     required this.exerciseIndex,
     required this.templateExercise,
     required this.onDeleteSet,
     required this.onSetChanged,
     required this.theme,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

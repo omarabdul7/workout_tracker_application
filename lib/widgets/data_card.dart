@@ -14,7 +14,7 @@ Widget buildDataCard(
   final isDarkMode = theme.brightness == Brightness.dark;
   final textColor = isDarkMode ? Colors.white : Colors.black;
 
-  final lightCardColor = const Color.fromARGB(255, 241, 246, 249);
+  const lightCardColor = Color.fromARGB(255, 241, 246, 249);
   final darkCardColor = Colors.grey[800]; 
 
   return Card(

@@ -6,7 +6,7 @@ import '../enums.dart';
 import '../widgets/data_comparison.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();

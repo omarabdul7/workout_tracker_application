@@ -4,6 +4,8 @@ import '/services/workout_service.dart';
 import 'new_workout_instance_page.dart';
 
 class WorkoutTemplateList extends StatelessWidget {
+  const WorkoutTemplateList({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

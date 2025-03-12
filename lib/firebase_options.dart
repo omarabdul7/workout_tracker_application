@@ -41,47 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: '***REMOVED***',
-    appId: '***REMOVED***4c2e9e638fc275cea62a6c',
+    apiKey: 'AIzaSyCgg2TE4PUSFrGCEgP318DlHHeCjwxAxP0',
+    appId: '1:1020680571397:web:4c2e9e638fc275cea62a6c',
     messagingSenderId: '1020680571397',
-    projectId: '***REMOVED***',
-    authDomain: '***REMOVED***.firebaseapp.com',
-    storageBucket: '***REMOVED***.appspot.com',
+    projectId: 'workout-tracker-a7b92',
+    authDomain: 'workout-tracker-a7b92.firebaseapp.com',
+    storageBucket: 'workout-tracker-a7b92.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: '***REMOVED***',
-    appId: '***REMOVED***33ddc8448105f527a62a6c',
+    apiKey: 'AIzaSyAUUIaIXJsisgaVRdktbw-ontQzniZLe68',
+    appId: '1:1020680571397:android:33ddc8448105f527a62a6c',
     messagingSenderId: '1020680571397',
-    projectId: '***REMOVED***',
-    storageBucket: '***REMOVED***.appspot.com',
+    projectId: 'workout-tracker-a7b92',
+    storageBucket: 'workout-tracker-a7b92.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: '***REMOVED***',
-    appId: '***REMOVED***d06374abbfa37beba62a6c',
+    apiKey: 'AIzaSyCsWAWUVZe4Pk3_XJ2N2emLszivBobKTjM',
+    appId: '1:1020680571397:ios:d06374abbfa37beba62a6c',
     messagingSenderId: '1020680571397',
-    projectId: '***REMOVED***',
-    storageBucket: '***REMOVED***.appspot.com',
+    projectId: 'workout-tracker-a7b92',
+    storageBucket: 'workout-tracker-a7b92.appspot.com',
     iosBundleId: 'com.example.workoutTrackerApplication',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: '***REMOVED***',
-    appId: '***REMOVED***d06374abbfa37beba62a6c',
+    apiKey: 'AIzaSyCsWAWUVZe4Pk3_XJ2N2emLszivBobKTjM',
+    appId: '1:1020680571397:ios:d06374abbfa37beba62a6c',
     messagingSenderId: '1020680571397',
-    projectId: '***REMOVED***',
-    storageBucket: '***REMOVED***.appspot.com',
+    projectId: 'workout-tracker-a7b92',
+    storageBucket: 'workout-tracker-a7b92.appspot.com',
     iosBundleId: 'com.example.workoutTrackerApplication',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: '***REMOVED***',
-    appId: '***REMOVED***3b82c309a315bb87a62a6c',
+    apiKey: 'AIzaSyCgg2TE4PUSFrGCEgP318DlHHeCjwxAxP0',
+    appId: '1:1020680571397:web:3b82c309a315bb87a62a6c',
     messagingSenderId: '1020680571397',
-    projectId: '***REMOVED***',
-    authDomain: '***REMOVED***.firebaseapp.com',
-    storageBucket: '***REMOVED***.appspot.com',
+    projectId: 'workout-tracker-a7b92',
+    authDomain: 'workout-tracker-a7b92.firebaseapp.com',
+    storageBucket: 'workout-tracker-a7b92.appspot.com',
   );
 
 }

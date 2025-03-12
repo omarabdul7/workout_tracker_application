@@ -1,7 +1,7 @@
-name: workout_tracker_application
-description: A new Flutter project.
-
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+name: new_workout_tracker
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
 
 version: 0.0.1+1
 
@@ -11,15 +11,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.17.0
+  intl: ^0.18.0
   english_words: ^4.0.0
   provider: ^6.0.0
-  firebase_core: ^3.1.1
+  firebase_core: ^2.22.0
   flutter_riverpod: ^2.0.0
-  cloud_firestore: ^5.0.2
+  cloud_firestore: ^4.13.0
   table_calendar: ^3.0.0
   pull_to_refresh: ^2.0.0
-  fl_chart: ^0.68.0
+  fl_chart: ^0.65.0
   flutter_staggered_animations: ^1.1.1
 
 
