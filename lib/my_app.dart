@@ -19,6 +19,12 @@ class MyApp extends StatelessWidget {
             title: 'Workout Tracker',
             theme: _buildTheme(appState.isDarkMode),
             home: const MyHomePage(),
+            routes: {
+              '/home': (context) {
+                final args = ModalRoute.of(context)?.settings.arguments;
+                return MyHomePage(initialIndex: args is int ? args : 0);
+              },
+            },
           );
         },
       ),
@@ -27,19 +33,31 @@ class MyApp extends StatelessWidget {
 
   ThemeData _buildTheme(bool isDarkMode) {
     final baseTheme = isDarkMode ? ThemeData.dark() : ThemeData.light();
+    
+    // Define more contrasting colors while keeping the same color scheme
+    final primaryColor = isDarkMode ? const Color(0xFF1F1F1F) : const Color(0xFF2C4C60);
+    final secondaryColor = isDarkMode ? const Color(0xFF3D85C6) : const Color(0xFF5B9BD5);
+    final surfaceColor = isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF5F9FC);
+    final backgroundColor = isDarkMode ? Colors.black : Colors.white;
+    final onPrimaryColor = Colors.white;
+    final onSurfaceColor = isDarkMode ? Colors.white : const Color(0xFF2C4C60);
+    
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 241, 246, 249),
+      seedColor: secondaryColor,
       brightness: isDarkMode ? Brightness.dark : Brightness.light,
+      primary: primaryColor,
+      onPrimary: onPrimaryColor,
+      secondary: secondaryColor,
+      onSecondary: Colors.white,
+      surface: surfaceColor,
+      onSurface: onSurfaceColor,
+      background: backgroundColor,
+      onBackground: isDarkMode ? Colors.white : Colors.black,
     );
 
     return baseTheme.copyWith(
-      colorScheme: colorScheme.copyWith(
-        primary: isDarkMode ? Colors.grey[900] : const Color.fromARGB(255, 241, 246, 249),
-        onPrimary: isDarkMode ? Colors.white : Colors.black,
-        surface: isDarkMode ? Colors.grey[900] : const Color(0xFF2C4C60),
-        onSurface: isDarkMode ? Colors.white : Colors.black,
-      ),
-      scaffoldBackgroundColor: isDarkMode ? Colors.black : Colors.white,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: backgroundColor,
       textTheme: TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
@@ -67,7 +85,7 @@ class MyApp extends StatelessWidget {
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: isDarkMode ? Colors.white : Colors.black,
+          color: isDarkMode ? Colors.white : const Color(0xFF2C2C2C),
         ),
         bodySmall: TextStyle(
           fontSize: 12,
@@ -75,38 +93,82 @@ class MyApp extends StatelessWidget {
         ),
       ),
       cardTheme: CardTheme(
-        color: isDarkMode 
-            ? Colors.grey[800] 
-            : const Color.fromARGB(255, 241, 246, 249),
+        color: surfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
         elevation: 4,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFF2C4C60),
+        backgroundColor: primaryColor,
         selectedItemColor: Colors.white,
-        unselectedItemColor: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
-        selectedLabelStyle: const TextStyle(fontSize: 12),
+        unselectedItemColor: isDarkMode ? Colors.grey.shade400 : Colors.white.withOpacity(0.7),
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
       ),
       appBarTheme: AppBarTheme(
-        color: isDarkMode ? Colors.black : Colors.white,
-        foregroundColor: isDarkMode ? Colors.white : Colors.black,
+        color: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: surfaceColor,
+        disabledColor: Colors.grey.withOpacity(0.2),
+        selectedColor: secondaryColor.withOpacity(0.2),
+        secondarySelectedColor: secondaryColor,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        labelStyle: TextStyle(
+          color: isDarkMode ? Colors.white : const Color(0xFF2C4C60),
+        ),
+        secondaryLabelStyle: TextStyle(
+          color: secondaryColor,
+          fontWeight: FontWeight.bold,
+        ),
+        brightness: isDarkMode ? Brightness.dark : Brightness.light,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      iconTheme: IconThemeData(
+        color: isDarkMode ? Colors.white : primaryColor,
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: secondaryColor,
+        linearTrackColor: secondaryColor.withOpacity(0.1),
       ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  final int initialIndex;
+  
+  const MyHomePage({Key? key, this.initialIndex = 0}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   Widget _getPage(int index) {
     switch (index) {

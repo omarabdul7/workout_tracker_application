@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -40,48 +41,47 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCgg2TE4PUSFrGCEgP318DlHHeCjwxAxP0',
-    appId: '1:1020680571397:web:4c2e9e638fc275cea62a6c',
-    messagingSenderId: '1020680571397',
-    projectId: 'workout-tracker-a7b92',
-    authDomain: 'workout-tracker-a7b92.firebaseapp.com',
-    storageBucket: 'workout-tracker-a7b92.appspot.com',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID'] ?? '',
+    authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET'] ?? '',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAUUIaIXJsisgaVRdktbw-ontQzniZLe68',
-    appId: '1:1020680571397:android:33ddc8448105f527a62a6c',
-    messagingSenderId: '1020680571397',
-    projectId: 'workout-tracker-a7b92',
-    storageBucket: 'workout-tracker-a7b92.appspot.com',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET'] ?? '',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCsWAWUVZe4Pk3_XJ2N2emLszivBobKTjM',
-    appId: '1:1020680571397:ios:d06374abbfa37beba62a6c',
-    messagingSenderId: '1020680571397',
-    projectId: 'workout-tracker-a7b92',
-    storageBucket: 'workout-tracker-a7b92.appspot.com',
-    iosBundleId: 'com.example.workoutTrackerApplication',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET'] ?? '',
+    iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID'] ?? '',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCsWAWUVZe4Pk3_XJ2N2emLszivBobKTjM',
-    appId: '1:1020680571397:ios:d06374abbfa37beba62a6c',
-    messagingSenderId: '1020680571397',
-    projectId: 'workout-tracker-a7b92',
-    storageBucket: 'workout-tracker-a7b92.appspot.com',
-    iosBundleId: 'com.example.workoutTrackerApplication',
+  static FirebaseOptions get macos => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_MACOS_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_MACOS_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MACOS_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_MACOS_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_MACOS_STORAGE_BUCKET'] ?? '',
+    iosBundleId: dotenv.env['FIREBASE_MACOS_BUNDLE_ID'] ?? '',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCgg2TE4PUSFrGCEgP318DlHHeCjwxAxP0',
-    appId: '1:1020680571397:web:3b82c309a315bb87a62a6c',
-    messagingSenderId: '1020680571397',
-    projectId: 'workout-tracker-a7b92',
-    authDomain: 'workout-tracker-a7b92.firebaseapp.com',
-    storageBucket: 'workout-tracker-a7b92.appspot.com',
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_WINDOWS_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_WINDOWS_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_WINDOWS_PROJECT_ID'] ?? '',
+    authDomain: dotenv.env['FIREBASE_WINDOWS_AUTH_DOMAIN'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_WINDOWS_STORAGE_BUCKET'] ?? '',
   );
-
 }

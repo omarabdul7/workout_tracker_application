@@ -29,5 +29,7 @@
 # Editor Swap Files
 *.swp
 
-
-
+# Environment files
+.env
+*.env.*
+sensitive-data.txt
