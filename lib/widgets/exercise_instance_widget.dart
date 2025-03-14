@@ -36,6 +36,9 @@ class ExerciseInstanceWidget extends StatelessWidget {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: theme.brightness == Brightness.dark 
+          ? theme.colorScheme.surface 
+          : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -63,7 +66,9 @@ class ExerciseInstanceWidget extends StatelessWidget {
   }
 
   Widget _buildExerciseHeader() {
-    final arrowColor = theme.brightness == Brightness.light ? theme.colorScheme.onSurface : theme.colorScheme.primary;
+    final arrowColor = theme.brightness == Brightness.light 
+        ? const Color(0xFF414C50) 
+        : const Color(0xFF414C50);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +117,7 @@ class ExerciseInstanceWidget extends StatelessWidget {
           style: TextStyle(
             color: theme.brightness == Brightness.dark
                 ? theme.colorScheme.secondary
-                : const Color(0xFF34A4FC), 
+                : const Color(0xFF414C50), 
             fontWeight: FontWeight.bold,
             fontSize: 15,
           ),
@@ -122,7 +127,11 @@ class ExerciseInstanceWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(
             'Set ${set.setNumber}: ${set.weight} lb x ${set.reps} reps',
-            style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+            style: TextStyle(
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.onSurface.withOpacity(0.7)
+                  : const Color(0xFF414C50),
+            ),
           ),
         )),
         Divider(thickness: 1, color: theme.colorScheme.onSurface.withOpacity(0.1)),
@@ -132,28 +141,32 @@ class ExerciseInstanceWidget extends StatelessWidget {
   }
 
   Widget _buildAddSetButton() {
+    final buttonColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.primary
+        : const Color(0xFF414C50);
+        
     return TextButton.icon(
       onPressed: () => onAddSet(exerciseIndex),
       icon: Icon(
         Icons.add,
-        color: theme.brightness == Brightness.light
-            ? const Color(0xFF2C4C60) 
-            : theme.colorScheme.primary, 
+        color: buttonColor,
       ),
       label: Text(
         'Add Set',
         style: TextStyle(
-          color: theme.brightness == Brightness.light
-              ? const Color(0xFF2C4C60) 
-              : theme.colorScheme.onPrimary, 
+          color: buttonColor,
           fontWeight: FontWeight.bold,
           fontSize: 14, 
         ),
       ),
       style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8), 
-        backgroundColor: Colors.transparent, 
-        side: BorderSide.none,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12), 
+        backgroundColor: theme.brightness == Brightness.dark
+            ? theme.colorScheme.surface.withOpacity(0.3)
+            : const Color(0xFFF5F9FC),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
     );
   }

@@ -76,7 +76,7 @@ Future<bool> _confirmDelete(BuildContext context) async {
             },
             child: Text(
               'Cancel',
-              style: TextStyle(color: theme.colorScheme.onPrimary),
+              style: TextStyle(color: theme.colorScheme.primary),
             ),
           ),
           TextButton(
@@ -89,7 +89,10 @@ Future<bool> _confirmDelete(BuildContext context) async {
             ),
           ),
         ],
-        backgroundColor: theme.cardTheme.color,
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       );
     },
   ) ?? false;

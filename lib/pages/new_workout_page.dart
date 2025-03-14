@@ -7,6 +7,8 @@ class NewWorkoutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       body: WorkoutTemplateList(),
       floatingActionButton: FloatingActionButton(
@@ -16,6 +18,8 @@ class NewWorkoutPage extends StatelessWidget {
             MaterialPageRoute(builder: (context) => const CreateWorkoutTemplate()),
           );
         },
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
     );

@@ -83,93 +83,170 @@ void _addExercise() {
   }
 @override
 Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  
   return Scaffold(
     appBar: AppBar(
       title: const Text('Create New Workout'),
+      backgroundColor: theme.colorScheme.primary,
+      foregroundColor: theme.colorScheme.onPrimary,
     ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Workout Name'),
-              onChanged: (value) {
-                setState(() {
-                  _workoutName = value;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a workout name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _exerciseController,
-                    decoration: const InputDecoration(labelText: 'Exercise Name'),
-                  ),
+    body: Container(
+      color: theme.colorScheme.background,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Workout Name',
+                  labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.8)),
+                  filled: true,
+                  fillColor: theme.inputDecorationTheme.fillColor,
+                  border: theme.inputDecorationTheme.border,
+                  enabledBorder: theme.inputDecorationTheme.enabledBorder,
+                  focusedBorder: theme.inputDecorationTheme.focusedBorder,
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 80,
-                  child: TextFormField(
-                    controller: _setsController,
-                    decoration: const InputDecoration(labelText: 'Sets'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 80,
-                  child: TextFormField(
-                    controller: _restPeriodController,
-                    decoration: const InputDecoration(labelText: 'Rest (s)'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _addExercise,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Exercises',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _exercises.length,
-                itemBuilder: (context, index) {
-                  final exercise = _exercises[index];
-                  return ListTile(
-                    title: Text('${exercise.name} (${exercise.sets} sets, ${exercise.restPeriod} sec rest)'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          _exercises.removeAt(index);
-                        });
-                      },
-                    ),
-                  );
+                style: TextStyle(color: theme.colorScheme.onSurface),
+                onChanged: (value) {
+                  setState(() {
+                    _workoutName = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a workout name';
+                  }
+                  return null;
                 },
               ),
-            ),
-            ElevatedButton(
-              onPressed: _saveWorkout,
-              child: const Text('Save Workout'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _exerciseController,
+                      decoration: InputDecoration(
+                        labelText: 'Exercise Name',
+                        labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.8)),
+                        filled: true,
+                        fillColor: theme.inputDecorationTheme.fillColor,
+                        border: theme.inputDecorationTheme.border,
+                        enabledBorder: theme.inputDecorationTheme.enabledBorder,
+                        focusedBorder: theme.inputDecorationTheme.focusedBorder,
+                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurface),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 80,
+                    child: TextFormField(
+                      controller: _setsController,
+                      decoration: InputDecoration(
+                        labelText: 'Sets',
+                        labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.8)),
+                        filled: true,
+                        fillColor: theme.inputDecorationTheme.fillColor,
+                        border: theme.inputDecorationTheme.border,
+                        enabledBorder: theme.inputDecorationTheme.enabledBorder,
+                        focusedBorder: theme.inputDecorationTheme.focusedBorder,
+                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurface),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 80,
+                    child: TextFormField(
+                      controller: _restPeriodController,
+                      decoration: InputDecoration(
+                        labelText: 'Rest (s)',
+                        labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.8)),
+                        filled: true,
+                        fillColor: theme.inputDecorationTheme.fillColor,
+                        border: theme.inputDecorationTheme.border,
+                        enabledBorder: theme.inputDecorationTheme.enabledBorder,
+                        focusedBorder: theme.inputDecorationTheme.focusedBorder,
+                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurface),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.add, color: theme.colorScheme.primary),
+                    onPressed: _addExercise,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Exercises',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onBackground,
+                  fontSize: 16,
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _exercises.length,
+                  itemBuilder: (context, index) {
+                    final exercise = _exercises[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: theme.colorScheme.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          exercise.name,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${exercise.sets} sets, ${exercise.restPeriod} sec rest',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.delete,
+                            color: theme.colorScheme.error,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _exercises.removeAt(index);
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _saveWorkout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Save Workout'),
+              ),
+            ],
+          ),
         ),
       ),
     ),

@@ -23,14 +23,24 @@ class SetRowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final backgroundColor = theme.brightness == Brightness.dark 
-        ? Colors.grey[800] 
-        : theme.colorScheme.primary; 
+        ? Colors.transparent
+        : const Color.fromARGB(255, 247, 250, 252); 
+
+    final textColor = theme.brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF192428);
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? const Color.fromARGB(0, 255, 255, 255)
+              : const Color(0xFFE0E0E0),
+        ),
       ),
-      padding: const EdgeInsets.all(5),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,13 +50,28 @@ class SetRowWidget extends StatelessWidget {
                 child: TextFormField(
                   decoration: InputDecoration(
                     labelText: 'Set ${set.setNumber} - lbs',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    labelStyle: TextStyle(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white70
+                          : const Color(0xFF414C50),
+                    ),
+                    filled: true,
+                    fillColor: theme.brightness == Brightness.dark
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.transparent
+                            : const Color(0xFFE0E0E0),
+                      ),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   keyboardType: TextInputType.number,
                   initialValue: set.weight.toString(),
-                  style: theme.textTheme.bodyMedium,
+                  style: TextStyle(color: textColor),
                   onChanged: (value) {
                     set.weight = double.tryParse(value) ?? 0.0;
                     onSetChanged();
@@ -59,13 +84,28 @@ class SetRowWidget extends StatelessWidget {
                 child: TextFormField(
                   decoration: InputDecoration(
                     labelText: 'Reps',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    labelStyle: TextStyle(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white70
+                          : const Color(0xFF414C50),
+                    ),
+                    filled: true,
+                    fillColor: theme.brightness == Brightness.dark
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.transparent
+                            : const Color(0xFFE0E0E0),
+                      ),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   keyboardType: TextInputType.number,
                   initialValue: set.reps.toString(),
-                  style: theme.textTheme.bodyMedium,
+                  style: TextStyle(color: textColor),
                   onChanged: (value) {
                     set.reps = int.tryParse(value) ?? 0;
                     onSetChanged();
@@ -74,7 +114,10 @@ class SetRowWidget extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                icon: Icon(
+                  Icons.delete, 
+                  color: theme.colorScheme.error,
+                ),
                 onPressed: () => onDeleteSet(exerciseIndex, set.setNumber - 1),
               ),
             ],
@@ -85,7 +128,9 @@ class SetRowWidget extends StatelessWidget {
               child: Text(
                 'Rest: ${templateExercise.restPeriod} seconds',
                 style: TextStyle(
-                  color: theme.colorScheme.secondary,
+                  color: theme.brightness == Brightness.dark
+                      ? const Color(0xFFF5F9FC)
+                      : const Color(0xFF414C50),
                   fontStyle: FontStyle.italic,
                   fontSize: 12,
                 ),

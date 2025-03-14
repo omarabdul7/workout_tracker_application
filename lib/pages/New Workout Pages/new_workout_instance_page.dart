@@ -129,33 +129,58 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   }
 
   Future<String?> _showAddExerciseDialog() async {
+    final theme = Theme.of(context);
     String? exerciseName;
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Add New Exercise'),
+          title: Text(
+            'Add New Exercise',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Enter exercise name'),
+            decoration: InputDecoration(
+              hintText: 'Enter exercise name',
+              hintStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+              filled: true,
+              fillColor: theme.inputDecorationTheme.fillColor,
+              border: theme.inputDecorationTheme.border,
+              enabledBorder: theme.inputDecorationTheme.enabledBorder,
+              focusedBorder: theme.inputDecorationTheme.focusedBorder,
+            ),
+            style: TextStyle(color: theme.colorScheme.onSurface),
             onChanged: (value) {
               exerciseName = value;
             },
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: theme.colorScheme.primary),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Add'),
+              child: Text(
+                'Add',
+                style: TextStyle(color: theme.colorScheme.primary),
+              ),
               onPressed: () {
                 Navigator.of(context).pop(exerciseName);
               },
             ),
           ],
+          backgroundColor: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         );
       },
     );
@@ -189,13 +214,23 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.workout.name),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         actions: [
           TextButton(
             onPressed: _saveWorkoutInstance,
-            child: const Text('Finish', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Finish', 
+              style: TextStyle(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold
+              ),
+            ),
           ),
         ],
       ),
@@ -203,9 +238,18 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         future: _loadDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: theme.colorScheme.primary,
+              ),
+            );
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
           } else {
             return _buildWorkoutForm();
           }
@@ -218,7 +262,9 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     final theme = Theme.of(context);
 
     return Container(
-      color: theme.scaffoldBackgroundColor,
+      color: theme.brightness == Brightness.dark 
+          ? theme.colorScheme.background
+          : const Color(0xFFF5F9FC),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -259,9 +305,20 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
                 ),
               ),
             ),
-            TimerWidget(
-              key: _timerKey,
-              currentExerciseRestPeriod: _currentExerciseRestPeriod,
+            const SizedBox(height: 16),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              color: theme.brightness == Brightness.dark 
+                  ? theme.colorScheme.surface 
+                  : Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TimerWidget(
+                  key: _timerKey,
+                  currentExerciseRestPeriod: _currentExerciseRestPeriod,
+                ),
+              ),
             ),
           ],
         ),
@@ -278,6 +335,7 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         backgroundColor: theme.colorScheme.primary,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 2,
       ),
     );
   }

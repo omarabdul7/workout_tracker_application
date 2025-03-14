@@ -512,6 +512,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildChartsSectionHeader() {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 16,
       runSpacing: 8,
@@ -520,8 +521,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       children: [
         Text(
           'Progress Insights',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         TimeFrameFilter(
