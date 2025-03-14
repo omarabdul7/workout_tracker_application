@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   // MARK: - Core UI Components
   Widget _buildFloatingActionButton() {
     return FloatingActionButton.extended(
-      onPressed: () => Navigator.pushNamed(context, '/workout/new'),
+      onPressed: () => Navigator.of(context).pushReplacementNamed('/home', arguments: 2),
       heroTag: 'newWorkout',
       icon: const Icon(Icons.fitness_center),
       label: const Text('New Workout'),
