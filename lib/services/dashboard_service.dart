@@ -31,6 +31,12 @@ class DashboardService {
         }
       }).toList();
 
+      // Calculate yearly workouts (workouts in the current year)
+      final currentYear = now.year;
+      final yearlyWorkouts = instances.where((instance) => 
+        instance.createdAt.year == currentYear
+      ).length;
+      
       // Group instances by date and process metrics
       for (final instance in filteredInstances) {
         final date = instance.createdAt;
@@ -72,6 +78,7 @@ class DashboardService {
       
       // Calculate derived metrics
       result.totalWorkouts = instances.length;
+      result.yearlyWorkouts = yearlyWorkouts;
       result.totalVolume = volumeByMuscleGroup.values.fold(
         0.0, 
         (sum, dateMap) => sum + dateMap.values.fold(0.0, (a, b) => a + b.toDouble())
@@ -329,6 +336,7 @@ class DashboardResult {
   int workoutStreak = 0;
   DateTime? lastWorkoutDate;
   int totalWorkouts = 0;
+  int yearlyWorkouts = 0;
   double totalVolume = 0;
   
   double thisWeekVolume = 0;

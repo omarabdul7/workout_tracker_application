@@ -375,7 +375,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hello, Champion!',
+                    'Hello, Omar!',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -450,8 +450,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       children: [
         Expanded(
           child: StatCard(
-            title: 'Total Workouts',
-            value: (_dashboardData.totalWorkouts ?? 0).toString(),
+            title: 'Workouts This Year',
+            value: (_dashboardData.yearlyWorkouts ?? 0).toString(),
             icon: Icons.fitness_center,
             color: Theme.of(context).colorScheme.primary,
           ),
