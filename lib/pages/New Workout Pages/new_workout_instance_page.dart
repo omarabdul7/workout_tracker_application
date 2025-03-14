@@ -30,14 +30,29 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
     WidgetsBinding.instance.addObserver(this);
     _loadDataFuture = _loadLastWorkoutInstance();
     _currentExerciseRestPeriod = widget.workout.exercises.first.restPeriod;
+    // Make sure any existing timer is stopped before starting a new one
+    TimerService().stopTimer();
+    TimerService().resetTimer();
     TimerService().startTimer();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    TimerService().dispose();
+    // Just stop the timer instead of disposing it
+    TimerService().stopTimer();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      // App is in background
+      TimerService().stopTimer();
+    } else if (state == AppLifecycleState.resumed) {
+      // App is in foreground
+      TimerService().startTimer();
+    }
   }
 
   Future<void> _loadLastWorkoutInstance() async {
@@ -81,6 +96,8 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Workout instance saved successfully')),
         );
+        // Stop the timer before navigating away, but don't dispose it
+        TimerService().stopTimer();
         Navigator.pop(context);
       }).catchError((error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -216,44 +233,51 @@ class NewWorkoutInstancePageState extends State<NewWorkoutInstancePage> with Wid
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.workout.name),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        actions: [
-          TextButton(
-            onPressed: _saveWorkoutInstance,
-            child: Text(
-              'Finish', 
-              style: TextStyle(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold
+    return WillPopScope(
+      onWillPop: () async {
+        // Stop the timer when navigating back, but don't dispose it
+        TimerService().stopTimer();
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.workout.name),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          actions: [
+            TextButton(
+              onPressed: _saveWorkoutInstance,
+              child: Text(
+                'Finish', 
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: FutureBuilder(
-        future: _loadDataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(
-                color: theme.colorScheme.primary,
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            );
-          } else {
-            return _buildWorkoutForm();
-          }
-        },
+          ],
+        ),
+        body: FutureBuilder(
+          future: _loadDataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              );
+            } else {
+              return _buildWorkoutForm();
+            }
+          },
+        ),
       ),
     );
   }

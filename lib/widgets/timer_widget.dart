@@ -19,7 +19,13 @@ class TimerWidgetState extends State<TimerWidget> {
   @override
   void initState() {
     super.initState();
-    _timerService.startTimer();
+    // We don't need to start the timer here as it's handled by the parent page
+  }
+
+  @override
+  void dispose() {
+    // We don't need to dispose the timer here as it's handled by the parent page
+    super.dispose();
   }
 
   void resetTimer() {
