@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           child: Column(
             children: [
               Container(
-                height: 200,
+                height: 100,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -289,22 +289,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
                 child: Stack(
                   children: [
-                    const Center(
-                      child: Icon(
-                        Icons.fitness_center,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                    ),
                     Positioned(
                       left: 16,
                       bottom: 16,
-                      child: Text(
-                        'Dashboard',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.fitness_center,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Dashboard',
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Positioned(
@@ -338,8 +341,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               _buildProgressSummarySection(),
               const SizedBox(height: 24),
               _buildChartsSection(),
-              const SizedBox(height: 24),
-              _buildRecentWorkoutSection(),
             ]),
           ),
         ),
@@ -629,72 +630,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildRecentWorkoutSection() {
-    final theme = Theme.of(context);
-    final lastWorkoutDate = _dashboardData.lastWorkoutDate;
-    
-    if (lastWorkoutDate == null) {
-      return const SizedBox.shrink();
-    }
-    
-    final lastWorkoutDateKey = DateTime(
-      lastWorkoutDate.year,
-      lastWorkoutDate.month,
-      lastWorkoutDate.day,
-    );
-    
-    final lastWorkout = _dashboardData.workoutInstancesByDate?[lastWorkoutDateKey]?.first;
-    
-    if (lastWorkout == null) {
-      return const SizedBox.shrink();
-    }
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Workout',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.history),
-                  onPressed: () => Navigator.of(context).pushReplacementNamed('/home', arguments: 1),
-                  tooltip: 'View history',
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            RecentWorkoutCard(
-              lastWorkoutDate: lastWorkoutDate,
-              lastWorkout: lastWorkout,
-              onViewDetails: () => Navigator.of(context).pushReplacementNamed('/home', arguments: 1),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
