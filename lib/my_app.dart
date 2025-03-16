@@ -5,6 +5,7 @@ import 'my_app_state.dart';
 import 'pages/history_page.dart';
 import 'pages/new_workout_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/progress_insights_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -307,8 +308,10 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         return const HistoryPage();
       case 2:
-        return const NewWorkoutPage();
+        return const ProgressInsightsPage();
       case 3:
+        return const NewWorkoutPage();
+      case 4:
         return const SettingsPage();
       default:
         return const HomePage();
@@ -332,6 +335,10 @@ class _MyHomePageState extends State<MyHomePage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.history),
               label: 'History',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.insights),
+              label: 'Insights',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center),

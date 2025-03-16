@@ -45,6 +45,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   bool _isLoading = false;
   String? _error;
 
+  // Data for Progress Insights
+  GroupBy _selectedGroupBy = GroupBy.muscleGroup;
+  String? _selectedMuscleGroup;
+  String? _selectedExercise;
+  List<String> _muscleGroups = [];
+  List<String> _exercises = [];
+
   // MARK: - Lifecycle Methods
   @override
   void initState() {
@@ -506,8 +513,67 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             padding: const EdgeInsets.all(16),
             child: _buildChartsSectionHeader(),
           ),
-          _buildChartContainer(),
+          // Check if there's any data available
+          _hasInsightData() 
+              ? Column(
+                  children: [
+                    _buildProgressInsightControls(),
+                    _buildChartContainer(),
+                  ],
+                )
+              : _buildNoInsightDataMessage(),
         ],
+      ),
+    );
+  }
+
+  bool _hasInsightData() {
+    return _dashboardData.volumeByMuscleGroup.isNotEmpty || 
+           _dashboardData.oneRepMaxByExercise.isNotEmpty || 
+           _dashboardData.setsByMuscleGroup.isNotEmpty;
+  }
+
+  Widget _buildNoInsightDataMessage() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.insights,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No workout data available yet',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete a few workouts to see insights about your progress over time.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pushReplacementNamed('/home', arguments: 2),
+              icon: const Icon(Icons.fitness_center),
+              label: const Text('Start a Workout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -540,6 +606,233 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
+  Widget _buildProgressInsightControls() {
+    // Initialize muscle groups and exercises if needed
+    if (_muscleGroups.isEmpty && _dashboardData.volumeByMuscleGroup.isNotEmpty) {
+      _muscleGroups = _dashboardData.volumeByMuscleGroup.keys.toList()..sort();
+      if (_selectedMuscleGroup == null && _muscleGroups.isNotEmpty) {
+        _selectedMuscleGroup = _muscleGroups.first;
+      }
+    }
+    
+    if (_exercises.isEmpty && _dashboardData.oneRepMaxByExercise.isNotEmpty) {
+      _exercises = _dashboardData.oneRepMaxByExercise.keys.toList()..sort();
+      if (_selectedExercise == null && _exercises.isNotEmpty) {
+        _selectedExercise = _exercises.first;
+      }
+    }
+
+    // If the selected group doesn't have any data available, automatically switch to the other option
+    if (_selectedGroupBy == GroupBy.muscleGroup && _muscleGroups.isEmpty && _exercises.isNotEmpty) {
+      _selectedGroupBy = GroupBy.exercise;
+    } else if (_selectedGroupBy == GroupBy.exercise && _exercises.isEmpty && _muscleGroups.isNotEmpty) {
+      _selectedGroupBy = GroupBy.muscleGroup;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Column(
+        children: [
+          // Group By selector
+          Row(
+            children: [
+              const Text('Group By:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 16),
+              Flexible(
+                child: SegmentedButton<GroupBy>(
+                  segments: const [
+                    ButtonSegment<GroupBy>(
+                      value: GroupBy.muscleGroup,
+                      label: Text('Muscle Group'),
+                      icon: Icon(Icons.fitness_center),
+                    ),
+                    ButtonSegment<GroupBy>(
+                      value: GroupBy.exercise,
+                      label: Text('Exercise'),
+                      icon: Icon(Icons.sports_gymnastics),
+                    ),
+                  ],
+                  selected: {_selectedGroupBy},
+                  onSelectionChanged: (Set<GroupBy> selection) {
+                    setState(() {
+                      _selectedGroupBy = selection.first;
+                      
+                      // Reset view type when switching group by
+                      if (_selectedGroupBy == GroupBy.muscleGroup) {
+                        _selectedViewType = ViewType.volume;
+                      } else {
+                        _selectedViewType = ViewType.oneRepMax;
+                      }
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          
+          // Selection dropdown based on groupBy
+          _selectedGroupBy == GroupBy.muscleGroup
+            ? _buildMuscleGroupDropdown()
+            : _buildExerciseDropdown(),
+          
+          // View type selector
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text('View:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 16),
+              Flexible(
+                child: SegmentedButton<ViewType>(
+                  segments: _selectedGroupBy == GroupBy.muscleGroup
+                    ? const [
+                        ButtonSegment<ViewType>(
+                          value: ViewType.volume,
+                          label: Text('Volume'),
+                          icon: Icon(Icons.bar_chart),
+                        ),
+                        ButtonSegment<ViewType>(
+                          value: ViewType.sets,
+                          label: Text('Sets'),
+                          icon: Icon(Icons.numbers),
+                        ),
+                      ]
+                    : const [
+                        ButtonSegment<ViewType>(
+                          value: ViewType.volume,
+                          label: Text('Volume'),
+                          icon: Icon(Icons.bar_chart),
+                        ),
+                        ButtonSegment<ViewType>(
+                          value: ViewType.sets,
+                          label: Text('Sets'),
+                          icon: Icon(Icons.numbers),
+                        ),
+                        ButtonSegment<ViewType>(
+                          value: ViewType.oneRepMax,
+                          label: Text('1RM'),
+                          icon: Icon(Icons.fitness_center),
+                        ),
+                      ],
+                  selected: {_selectedViewType},
+                  onSelectionChanged: (Set<ViewType> selection) {
+                    setState(() {
+                      _selectedViewType = selection.first;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMuscleGroupDropdown() {
+    if (_muscleGroups.isEmpty) {
+      return const Text('No muscle groups found');
+    }
+    
+    return Row(
+      children: [
+        const Text('Muscle Group:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(width: 16),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButton<String>(
+              value: _selectedMuscleGroup,
+              isExpanded: true,
+              underline: Container(), // Remove the default underline
+              dropdownColor: Theme.of(context).colorScheme.surface,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              items: _muscleGroups.map((group) {
+                return DropdownMenuItem<String>(
+                  value: group,
+                  child: Text(
+                    group,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedMuscleGroup = newValue;
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExerciseDropdown() {
+    if (_exercises.isEmpty) {
+      return const Text('No exercises found');
+    }
+    
+    return Row(
+      children: [
+        const Text('Exercise:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(width: 16),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButton<String>(
+              value: _selectedExercise,
+              isExpanded: true,
+              underline: Container(), // Remove the default underline
+              dropdownColor: Theme.of(context).colorScheme.surface,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              items: _exercises.map((exercise) {
+                return DropdownMenuItem<String>(
+                  value: exercise,
+                  child: Text(
+                    exercise,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedExercise = newValue;
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildChartContainer() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -557,257 +850,440 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           color: theme.colorScheme.primary.withOpacity(0.1),
         ),
       ),
-      child: _buildChartTabs(),
+      child: _buildSelectedChart(),
     );
   }
 
-  Widget _buildChartTabs() {
-    final theme = Theme.of(context);
-    final tabBorder = BorderRadius.circular(8);
-    
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabs: const [
-              Tab(text: 'Volume', height: 40),
-              Tab(text: 'Sets', height: 40),
-              Tab(text: 'One Rep Max', height: 40),
-            ],
-            labelStyle: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.7),
-            indicatorColor: theme.colorScheme.primary,
-            indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Colors.transparent,
-            splashBorderRadius: tabBorder,
-            indicator: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: tabBorder,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 320,
-          width: double.infinity,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: VolumeChart(
-                  weeklyVolumeData: _dashboardData.weeklyVolumeData ?? [],
-                  selectedTimeFrame: _selectedTimeFrame,
-                  onTimeFrameSelected: (timeFrame) {
-                    setState(() {
-                      _selectedTimeFrame = timeFrame;
-                      _fetchWorkoutData();
-                    });
-                  },
-                ),
-              ),
-              _buildSetsChart(),
-              _buildOneRepMaxChart(),
-            ],
-          ),
-        ),
-      ],
-    );
+  Widget _buildSelectedChart() {
+    if (_selectedGroupBy == GroupBy.muscleGroup) {
+      // Show muscle group charts
+      if (_selectedMuscleGroup == null || _muscleGroups.isEmpty) {
+        return _buildInsightEmptyChartIndicator('Select a muscle group');
+      }
+      
+      if (_selectedViewType == ViewType.volume) {
+        return _buildMuscleGroupVolumeChart();
+      } else {
+        return _buildMuscleGroupSetsChart();
+      }
+    } else {
+      // Show exercise charts
+      if (_selectedExercise == null || _exercises.isEmpty) {
+        return _buildInsightEmptyChartIndicator('Select an exercise');
+      }
+      
+      if (_selectedViewType == ViewType.volume) {
+        return _buildExerciseVolumeChart();
+      } else if (_selectedViewType == ViewType.sets) {
+        return _buildExerciseSetsChart();
+      } else {
+        return _buildExerciseOneRepMaxChart();
+      }
+    }
   }
 
-  // MARK: - Chart Widgets
-  Widget _buildSetsChart() {
-    if (_dashboardData.setsByMuscleGroup.isEmpty) {
-      return _buildEmptyChartIndicator('Sets by Muscle Group');
+  Widget _buildMuscleGroupVolumeChart() {
+    if (_selectedMuscleGroup == null || 
+        !_dashboardData.volumeByMuscleGroup.containsKey(_selectedMuscleGroup)) {
+      return _buildInsightEmptyChartIndicator('No volume data for $_selectedMuscleGroup');
     }
 
-    // Calculate total sets per muscle group
-    final Map<String, int> totalSetsByMuscleGroup = {};
-    
-    _dashboardData.setsByMuscleGroup.forEach((muscleGroup, dateMap) {
-      totalSetsByMuscleGroup[muscleGroup] = dateMap.values
-          .fold(0, (total, sets) => total + sets.toInt());
-    });
-    
-    // Sort muscle groups by total sets (descending)
-    final sortedMuscleGroups = totalSetsByMuscleGroup.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    
-    // Take top 6 muscle groups or all if less than 6
-    final topMuscleGroups = sortedMuscleGroups.take(6).toList();
-    
-    // Generate colors for each muscle group
-    final List<Color> muscleGroupColors = [
-      Theme.of(context).colorScheme.primary,
-      Theme.of(context).colorScheme.secondary,
-      Colors.green.shade600,
-      Colors.orange.shade600,
-      Colors.purple.shade500,
-      Colors.teal.shade600,
-    ];
+    final volumeData = _dashboardData.volumeByMuscleGroup[_selectedMuscleGroup]!;
+    if (volumeData.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No volume data available');
+    }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    // Convert map data to chart data for LineChart
+    List<MapEntry<DateTime, double>> chartData = [];
+    volumeData.forEach((dateStr, volume) {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final date = DateTime(
+          int.parse(parts[0]), 
+          int.parse(parts[1]), 
+          int.parse(parts[2])
+        );
+        chartData.add(MapEntry(date, volume.toDouble()));
+      }
+    });
+
+    // Sort by date
+    chartData.sort((a, b) => a.key.compareTo(b.key));
+
+    // Create spots for the chart
+    final spots = chartData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.value);
+    }).toList();
+
+    return _buildInsightLineChart(
+      spots, 
+      'Volume (kg) - $_selectedMuscleGroup', 
+      chartData.map((e) => e.key).toList()
+    );
+  }
+
+  Widget _buildMuscleGroupSetsChart() {
+    if (_selectedMuscleGroup == null || 
+        !_dashboardData.setsByMuscleGroup.containsKey(_selectedMuscleGroup)) {
+      return _buildInsightEmptyChartIndicator('No sets data for $_selectedMuscleGroup');
+    }
+
+    final setsData = _dashboardData.setsByMuscleGroup[_selectedMuscleGroup]!;
+    if (setsData.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No sets data available');
+    }
+
+    // Convert map data to chart data
+    List<MapEntry<DateTime, double>> chartData = [];
+    setsData.forEach((dateStr, sets) {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final date = DateTime(
+          int.parse(parts[0]), 
+          int.parse(parts[1]), 
+          int.parse(parts[2])
+        );
+        chartData.add(MapEntry(date, sets.toDouble()));
+      }
+    });
+
+    // Sort by date
+    chartData.sort((a, b) => a.key.compareTo(b.key));
+
+    // Create spots for the chart
+    final spots = chartData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.value);
+    }).toList();
+
+    return _buildInsightLineChart(
+      spots, 
+      'Number of Sets - $_selectedMuscleGroup', 
+      chartData.map((e) => e.key).toList()
+    );
+  }
+
+  Widget _buildExerciseVolumeChart() {
+    if (_selectedExercise == null) {
+      return _buildInsightEmptyChartIndicator('No exercise selected');
+    }
+
+    // Extract volume data for the selected exercise
+    Map<String, double> volumeData = {};
+    _dashboardData.workoutInstancesByDate.forEach((date, instances) {
+      for (final instance in instances) {
+        for (final exercise in instance.exercises) {
+          if (exercise.name == _selectedExercise) {
+            final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            volumeData.update(
+              dateStr, 
+              (value) => value + exercise.totalVolume, 
+              ifAbsent: () => exercise.totalVolume
+            );
+          }
+        }
+      }
+    });
+
+    if (volumeData.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No volume data for $_selectedExercise');
+    }
+
+    // Convert map data to chart data
+    List<MapEntry<DateTime, double>> chartData = [];
+    volumeData.forEach((dateStr, volume) {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final date = DateTime(
+          int.parse(parts[0]), 
+          int.parse(parts[1]), 
+          int.parse(parts[2])
+        );
+        chartData.add(MapEntry(date, volume));
+      }
+    });
+
+    // Sort by date
+    chartData.sort((a, b) => a.key.compareTo(b.key));
+
+    // Create spots for the chart
+    final spots = chartData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.value);
+    }).toList();
+
+    return _buildInsightLineChart(
+      spots, 
+      'Volume (kg) - $_selectedExercise', 
+      chartData.map((e) => e.key).toList()
+    );
+  }
+
+  Widget _buildExerciseSetsChart() {
+    if (_selectedExercise == null) {
+      return _buildInsightEmptyChartIndicator('No exercise selected');
+    }
+
+    // Extract sets data for the selected exercise
+    Map<String, int> setsData = {};
+    _dashboardData.workoutInstancesByDate.forEach((date, instances) {
+      for (final instance in instances) {
+        for (final exercise in instance.exercises) {
+          if (exercise.name == _selectedExercise) {
+            final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+            setsData.update(
+              dateStr, 
+              (value) => value + exercise.sets.length, 
+              ifAbsent: () => exercise.sets.length
+            );
+          }
+        }
+      }
+    });
+
+    if (setsData.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No sets data for $_selectedExercise');
+    }
+
+    // Convert map data to chart data
+    List<MapEntry<DateTime, double>> chartData = [];
+    setsData.forEach((dateStr, sets) {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final date = DateTime(
+          int.parse(parts[0]), 
+          int.parse(parts[1]), 
+          int.parse(parts[2])
+        );
+        chartData.add(MapEntry(date, sets.toDouble()));
+      }
+    });
+
+    // Sort by date
+    chartData.sort((a, b) => a.key.compareTo(b.key));
+
+    // Create spots for the chart
+    final spots = chartData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.value);
+    }).toList();
+
+    return _buildInsightLineChart(
+      spots, 
+      'Number of Sets - $_selectedExercise', 
+      chartData.map((e) => e.key).toList()
+    );
+  }
+
+  Widget _buildExerciseOneRepMaxChart() {
+    if (_selectedExercise == null || 
+        !_dashboardData.oneRepMaxByExercise.containsKey(_selectedExercise)) {
+      return _buildInsightEmptyChartIndicator('No 1RM data for $_selectedExercise');
+    }
+
+    final oneRepMaxData = _dashboardData.oneRepMaxByExercise[_selectedExercise]!;
+    if (oneRepMaxData.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No 1RM data available');
+    }
+
+    // Convert map data to chart data
+    List<MapEntry<DateTime, double>> chartData = [];
+    oneRepMaxData.forEach((dateStr, oneRepMax) {
+      final parts = dateStr.split('-');
+      if (parts.length == 3) {
+        final date = DateTime(
+          int.parse(parts[0]), 
+          int.parse(parts[1]), 
+          int.parse(parts[2])
+        );
+        chartData.add(MapEntry(date, oneRepMax));
+      }
+    });
+
+    // Sort by date
+    chartData.sort((a, b) => a.key.compareTo(b.key));
+
+    // Create spots for the chart
+    final spots = chartData.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.value);
+    }).toList();
+
+    return _buildInsightLineChart(
+      spots, 
+      '1 Rep Max (kg) - $_selectedExercise', 
+      chartData.map((e) => e.key).toList(),
+      isOneRepMax: true,
+    );
+  }
+
+  Widget _buildInsightLineChart(
+    List<FlSpot> spots, 
+    String title, 
+    List<DateTime> dates, 
+    {bool isOneRepMax = false}
+  ) {
+    if (spots.isEmpty) {
+      return _buildInsightEmptyChartIndicator('No data available for the chart');
+    }
+
+    // Find min and max values for better scaling
+    double minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    double maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+    
+    // Add some padding
+    minY = (minY * 0.9).floorToDouble();
+    maxY = (maxY * 1.1).ceilToDouble();
+    
+    // Ensure positive min value
+    minY = minY < 0 ? 0 : minY;
+    
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      height: 320,
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sets by Muscle Group',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: topMuscleGroups.isNotEmpty ? 
-                      (topMuscleGroups[0].value * 1.2) : 10,
-                  titlesData: _getSetsChartTitles(topMuscleGroups),
-                  gridData: _getChartGridData(
-                    topMuscleGroups.isNotEmpty && topMuscleGroups[0].value > 0 
-                        ? (topMuscleGroups[0].value * 1.2) / 5 
-                        : 1.0
-                  ),
-                  borderData: _getChartBorderData(),
-                  barGroups: List.generate(
-                    topMuscleGroups.length,
-                    (index) => BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          toY: topMuscleGroups[index].value.toDouble(),
-                          color: index < muscleGroupColors.length 
-                              ? muscleGroupColors[index] 
-                              : Theme.of(context).colorScheme.primary,
-                          width: 18,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                            topRight: Radius.circular(6),
-                          ),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: topMuscleGroups.isNotEmpty ? 
-                                (topMuscleGroups[0].value * 1.2) : 10,
-                            color: Colors.grey.withOpacity(0.1),
-                          ),
-                        ),
-                      ],
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  horizontalInterval: maxY == minY ? 1.0 : (maxY - minY) / 5,
+                  verticalInterval: 1,
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index >= 0 && index < dates.length) {
+                          return Text(
+                            '${dates[index].month}/${dates[index].day}',
+                            style: const TextStyle(fontSize: 10),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      interval: dates.length > 10 ? dates.length / 10 : 1,
                     ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: const Color(0xff37434d), width: 1),
+                ),
+                minX: 0,
+                maxX: spots.length - 1.0,
+                minY: minY,
+                maxY: maxY,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: false,
+                    color: primaryColor,
+                    barWidth: 4,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 6,
+                          color: primaryColor,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: primaryColor.withOpacity(0.2),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                      return touchedSpots.map((LineBarSpot touchedSpot) {
+                        final index = touchedSpot.x.toInt();
+                        if (index >= 0 && index < dates.length) {
+                          final date = dates[index];
+                          return LineTooltipItem(
+                            '${date.month}/${date.day}/${date.year}\n',
+                            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            children: [
+                              TextSpan(
+                                text: isOneRepMax ? 
+                                  '1RM: ${touchedSpot.y.toStringAsFixed(1)} kg' : 
+                                  '${touchedSpot.y.toStringAsFixed(1)}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          );
+                        }
+                        return null;
+                      }).toList();
+                    },
                   ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          _buildChartLegend(topMuscleGroups, muscleGroupColors),
         ],
       ),
     );
   }
-  
-  Widget _buildOneRepMaxChart() {
-    if (_dashboardData.bestOneRepMaxByExercise.isEmpty) {
-      return _buildEmptyChartIndicator('One Rep Max Progress');
-    }
 
-    // Sort exercises by their one rep max values (descending)
-    final sortedExercises = _dashboardData.bestOneRepMaxByExercise.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    
-    // Take top 5 exercises or all if less than 5
-    final topExercises = sortedExercises.take(5).toList();
-    
-    // Generate colors for each exercise
-    final List<Color> exerciseColors = [
-      Theme.of(context).colorScheme.primary,
-      Theme.of(context).colorScheme.secondary,
-      Colors.green.shade600,
-      Colors.amber.shade600,
-      Colors.purple.shade500,
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'One Rep Max Progress',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+  Widget _buildInsightEmptyChartIndicator(String message) {
+    return SizedBox(
+      height: 320,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bar_chart,
+              size: 64,
+              color: Colors.grey.withOpacity(0.5),
             ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: sortedExercises.isNotEmpty ? 
-                      (sortedExercises[0].value * 1.2) : 100,
-                  minY: 0,
-                  titlesData: _getOneRepMaxChartTitles(topExercises),
-                  gridData: _getChartGridData(
-                    sortedExercises.isNotEmpty && sortedExercises[0].value > 0 
-                        ? (sortedExercises[0].value * 1.2) / 5 
-                        : 10.0
-                  ),
-                  borderData: _getChartBorderData(),
-                  barGroups: List.generate(
-                    topExercises.length,
-                    (index) => BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          toY: topExercises[index].value,
-                          color: index < exerciseColors.length 
-                              ? exerciseColors[index] 
-                              : Theme.of(context).colorScheme.primary,
-                          width: 18,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                            topRight: Radius.circular(6),
-                          ),
-                          backDrawRodData: BackgroundBarChartRodData(
-                            show: true,
-                            toY: sortedExercises.isNotEmpty ? 
-                                (sortedExercises[0].value * 1.2) : 100,
-                            color: Colors.grey.withOpacity(0.1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.withOpacity(0.8),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _buildOneRepMaxLegend(topExercises, exerciseColors),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -999,7 +1475,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return FlGridData(
       show: true,
       drawVerticalLine: false,
-      horizontalInterval: interval,
+      horizontalInterval: interval <= 0 ? 1.0 : interval,
       getDrawingHorizontalLine: (value) => FlLine(
         color: Colors.grey.withOpacity(0.2),
         strokeWidth: 1,
