@@ -22,6 +22,11 @@ dependencies:
   fl_chart: ^0.70.2
   flutter_staggered_animations: ^1.1.1
   flutter_dotenv: ^5.2.1
+  # Movement tracking dependencies
+  pedometer: ^3.0.0
+  flutter_activity_recognition: ^4.0.0
+  geolocator: ^10.1.0
+  permission_handler: ^11.0.0
 
 
 dev_dependencies:

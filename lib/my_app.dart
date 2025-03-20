@@ -6,6 +6,7 @@ import 'pages/history_page.dart';
 import 'pages/new_workout_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/progress_insights_page.dart';
+import 'pages/movement_tracking_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -312,6 +313,8 @@ class _MyHomePageState extends State<MyHomePage> {
       case 3:
         return const NewWorkoutPage();
       case 4:
+        return const MovementTrackingPage();
+      case 5:
         return const SettingsPage();
       default:
         return const HomePage();
@@ -343,6 +346,10 @@ class _MyHomePageState extends State<MyHomePage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center),
               label: 'New Workout',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.directions_run),
+              label: 'Tracking',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
